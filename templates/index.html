@@ -487,8 +487,8 @@
             // Кнопка топа кланов
             document.getElementById('topClansBtn').addEventListener('click', showTopClans);
             
-            // Автосохранение каждые 30 секунд
-            setInterval(saveProgress, 30000);
+            // Автосохранение каждую секунду
+            setInterval(saveProgress, 1000);
             
             // Сохраняем при закрытии
             window.addEventListener('beforeunload', saveProgress);
