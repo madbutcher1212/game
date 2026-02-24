@@ -203,7 +203,7 @@ def calculate_hourly_income_and_growth(buildings, town_hall_level, current_popul
     for b in buildings:
         building_id = b["id"]
         level = b["level"]
-        count = b.get("count", 1)
+        count = 1  # Всегда 1, здание одно
         
         config = BUILDINGS_CONFIG.get(building_id)
         if not config or level == 0 or not config.get("income"):
@@ -212,39 +212,40 @@ def calculate_hourly_income_and_growth(buildings, town_hall_level, current_popul
         level_income = config["income"][level - 1]
         for resource, value in level_income.items():
             if resource in income:
-                income[resource] += value * count
+                income[resource] += value  # Умножение на count убрано
     
-    # Расчет роста населения
+    # Расчет потребления еды
     food_production = income["food"]
-    food_needed = current_population
+    food_consumption = current_population  # Каждый житель ест 1 еды
+    food_balance = food_production - food_consumption
     
-    population_growth = 0
-    food_left = food_production - food_needed
-    
-    if food_left >= 0:
-        # Еды хватает - население растет
-        income["food"] = food_left
-        potential_growth = 3
-        new_population = current_population + potential_growth
-        if new_population <= max_population:
-            population_growth = potential_growth
+    if food_balance >= 0:
+        # Еды хватает или есть избыток
+        income["food"] = food_balance  # Остаток еды
+        population_growth = 3
+        if current_population + population_growth <= max_population:
+            population_growth_result = population_growth
         else:
-            population_growth = max_population - current_population
+            population_growth_result = max_population - current_population
     else:
-        # Еды не хватает - проверяем запасы
-        total_food_available = current_food + food_production
-        if total_food_available >= food_needed:
+        # Еды не хватает, смотрим запасы
+        needed_food = abs(food_balance)  # Сколько еды не хватает
+        
+        if current_food >= needed_food:
             # Можем покрыть из запасов
-            income["food"] = total_food_available - food_needed
-            # Население не растет, но и не умирает
-            population_growth = 0
+            income["food"] = 0  # Вся произведенная еда ушла на прокорм
+            # Запасы уменьшатся позже при обновлении
+            population_growth_result = 3
+            if current_population + population_growth_result <= max_population:
+                population_growth_result = population_growth_result
+            else:
+                population_growth_result = max_population - current_population
         else:
-            # Катастрофа - еды нет совсем
+            # Запасов не хватает
             income["food"] = 0
-            population_growth = 0
-            # Здесь можно добавить механизм голода, но пока просто не растем
+            population_growth_result = 0  # Рост останавливается
     
-    return income, population_growth
+    return income, population_growth_result
 
 @app.route('/')
 def index():
@@ -680,3 +681,4 @@ def top_clans():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
+
