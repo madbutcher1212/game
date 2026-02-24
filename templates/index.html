@@ -190,15 +190,22 @@
             margin-bottom: 4px;
         }
         
-        .town-hall-level {
+        .town-hall-income {
             font-size: 14px;
-            color: #8b6b42;
+            color: #4CAF50;
+            font-weight: bold;
             margin-bottom: 4px;
         }
         
-        .town-hall-desc {
+        .town-hall-level {
+            font-size: 14px;
+            color: #8b6b42;
+            margin-bottom: 2px;
+        }
+        
+        .town-hall-next {
             font-size: 12px;
-            color: #a58e71;
+            color: #ff9800;
         }
         
         .town-hall-level-badge {
@@ -254,6 +261,7 @@
         .building-card.unavailable {
             opacity: 0.7;
             border-color: #999;
+            background: #f5f5f5;
         }
         
         .building-card.locked {
@@ -349,13 +357,17 @@
             transition: background 0.2s;
         }
         
-        .building-upgrade-btn:hover {
-            background: #45a049;
+        .building-upgrade-btn.available {
+            background: #4CAF50;
         }
         
-        .building-upgrade-btn:disabled {
+        .building-upgrade-btn.unavailable {
             background: #ccc;
             cursor: not-allowed;
+        }
+        
+        .building-upgrade-btn:hover:not(.unavailable) {
+            background: #45a049;
         }
         
         .building-lock-reason {
@@ -369,7 +381,7 @@
             background: #f0f0f0;
             border-radius: 12px;
             padding: 8px;
-            margin: 10px 0;
+            margin: 10px 0 5px 0;
             text-align: center;
             font-size: 12px;
             color: #666;
@@ -577,8 +589,9 @@
                             <div class="town-hall-icon">🏛️</div>
                             <div class="town-hall-info">
                                 <div class="town-hall-name">Ратуша</div>
-                                <div class="town-hall-level">Уровень <span id="townHallLevel">1</span></div>
-                                <div class="town-hall-desc">Центр вашего города</div>
+                                <div class="town-hall-income" id="townHallIncome">+5 🪙/ч</div>
+                                <div class="town-hall-level">Уровень <span id="townHallLevel">1</span>/5</div>
+                                <div class="town-hall-next" id="townHallNext">⬆️ +10 🪙/ч</div>
                             </div>
                             <div class="town-hall-level-badge" id="townHallLevelBadge">1</div>
                         </div>
@@ -714,7 +727,25 @@
             { id: 'house', count: 1, level: 1 },
             { id: 'farm', count: 1, level: 1 },
             { id: 'lumber', count: 1, level: 1 }
+            // quarry пока нет
         ];
+        
+        // Доход ратуши по уровням
+        const TOWN_HALL_INCOME = {
+            1: 5,
+            2: 10,
+            3: 25,
+            4: 50,
+            5: 100
+        };
+        
+        // Стоимость улучшения ратуши
+        const TOWN_HALL_UPGRADE_COST = {
+            2: { gold: 50, wood: 20, stone: 0 },
+            3: { gold: 300, wood: 100, stone: 30 },
+            4: { gold: 1000, wood: 250, stone: 100 },
+            5: { gold: 5000, wood: 1000, stone: 400 }
+        };
         
         // Конфиг зданий
         const BUILDINGS_CONFIG = {
@@ -764,7 +795,6 @@
                 name: 'Каменоломня',
                 icon: '⛰️',
                 section: 'economic',
-                requiredTownHall: 2,
                 maxLevel: 5,
                 baseCost: { gold: 60, wood: 40 },
                 income: [
@@ -835,27 +865,39 @@
         
         // Получить доход здания на определённом уровне
         function getBuildingIncome(buildingId, level) {
+            if (buildingId === 'townhall') {
+                return { gold: TOWN_HALL_INCOME[level] || 0, food: 0, wood: 0, stone: 0 };
+            }
             const config = BUILDINGS_CONFIG[buildingId];
             if (!config || level === 0) return { food: 0, wood: 0, stone: 0, gold: 0 };
             return config.income[level - 1] || { food: 0, wood: 0, stone: 0, gold: 0 };
         }
         
-        // Получить стоимость улучшения
+        // Получить стоимость улучшения здания
         function getUpgradeCost(buildingId, currentLevel) {
+            if (buildingId === 'townhall') {
+                return TOWN_HALL_UPGRADE_COST[currentLevel + 1] || { gold: 0, wood: 0, stone: 0 };
+            }
             const config = BUILDINGS_CONFIG[buildingId];
-            if (!config) return { gold: 0, wood: 0 };
+            if (!config) return { gold: 0, wood: 0, stone: 0 };
             
             // Стоимость растёт с уровнем
             const multiplier = currentLevel + 1;
             return {
                 gold: config.baseCost.gold * multiplier,
-                wood: config.baseCost.wood * multiplier
+                wood: config.baseCost.wood * multiplier,
+                stone: 0
             };
+        }
+        
+        // Проверить, достаточно ли уровня ратуши для здания определённого уровня
+        function isTownHallLevelEnough(buildingLevel) {
+            return userData.townHallLevel >= buildingLevel;
         }
         
         // Расчёт дохода в час
         function calculateHourlyIncome() {
-            let income = { gold: 0, wood: 0, food: 0, stone: 0 };
+            let income = { gold: TOWN_HALL_INCOME[userData.townHallLevel] || 0, wood: 0, food: 0, stone: 0 };
             
             buildings.forEach(building => {
                 const buildingIncome = getBuildingIncome(building.id, building.level);
@@ -876,6 +918,21 @@
             document.getElementById('woodIncome').textContent = `+${income.wood}/ч`;
             document.getElementById('foodIncome').textContent = `+${income.food}/ч`;
             document.getElementById('stoneIncome').textContent = `+${income.stone}/ч`;
+        }
+        
+        // Обновление информации о ратуше
+        function updateTownHallDisplay() {
+            const currentIncome = TOWN_HALL_INCOME[userData.townHallLevel] || 0;
+            document.getElementById('townHallIncome').textContent = `+${currentIncome} 🪙/ч`;
+            document.getElementById('townHallLevel').textContent = userData.townHallLevel;
+            document.getElementById('townHallLevelBadge').textContent = userData.townHallLevel;
+            
+            if (userData.townHallLevel < 5) {
+                const nextIncome = TOWN_HALL_INCOME[userData.townHallLevel + 1] || 0;
+                document.getElementById('townHallNext').textContent = `⬆️ +${nextIncome} 🪙/ч`;
+            } else {
+                document.getElementById('townHallNext').textContent = `🏆 Макс. уровень`;
+            }
         }
         
         // Расчёт накопленных ресурсов
@@ -942,26 +999,34 @@
             }
         }
         
-        // Проверить, доступно ли здание
-        function isBuildingAvailable(buildingId) {
+        // Проверить, доступно ли здание для постройки/улучшения
+        function isBuildingAvailable(buildingId, targetLevel) {
+            if (buildingId === 'townhall') return true;
+            
             const config = BUILDINGS_CONFIG[buildingId];
             if (!config) return false;
             
-            if (config.requiredTownHall && userData.townHallLevel < config.requiredTownHall) {
-                return false;
-            }
-            
-            return true;
+            // Проверяем уровень ратуши
+            return userData.townHallLevel >= targetLevel;
         }
         
         // Проверить, можно ли улучшить
         function canUpgrade(buildingId, currentLevel) {
+            if (buildingId === 'townhall') {
+                if (currentLevel >= 5) return false;
+                const cost = getUpgradeCost(buildingId, currentLevel);
+                return userData.gold >= cost.gold && 
+                       userData.wood >= cost.wood && 
+                       userData.stone >= cost.stone;
+            }
+            
             const config = BUILDINGS_CONFIG[buildingId];
             if (!config) return false;
             
-            if (!isBuildingAvailable(buildingId)) return false;
-            
             if (currentLevel >= config.maxLevel) return false;
+            
+            // Проверяем уровень ратуши для следующего уровня
+            if (!isBuildingAvailable(buildingId, currentLevel + 1)) return false;
             
             const cost = getUpgradeCost(buildingId, currentLevel);
             return userData.gold >= cost.gold && userData.wood >= cost.wood;
@@ -975,12 +1040,9 @@
             document.getElementById('foodBar').textContent = userData.food;
             document.getElementById('stoneBar').textContent = userData.stone;
             
-            // Обновляем доход
+            // Обновляем доход и ратушу
             updateIncomeDisplay();
-            
-            // Обновляем ратушу
-            document.getElementById('townHallLevel').textContent = userData.townHallLevel;
-            document.getElementById('townHallLevelBadge').textContent = userData.townHallLevel;
+            updateTownHallDisplay();
             
             // Социальные постройки
             let socialHtml = '';
@@ -1002,22 +1064,30 @@
             
             const level = getBuildingLevel(buildingId);
             const count = getBuildingCount(buildingId);
-            const isUnlocked = isBuildingAvailable(buildingId);
             
-            // Статус здания
+            // Статус здания и проверка доступности
             let statusClass = '';
-            let statusText = '';
             let statusBadge = '';
+            let lockReason = '';
             
-            if (!isUnlocked) {
-                statusClass = 'locked';
-                statusBadge = '<span class="building-status locked">🔒 Закрыто</span>';
-            } else if (level === 0) {
-                statusClass = 'unavailable';
-                statusBadge = '<span class="building-status">🚫 Не построено</span>';
+            if (level === 0) {
+                // Здание не построено - проверяем доступность 1 уровня
+                if (!isBuildingAvailable(buildingId, 1)) {
+                    statusClass = 'locked';
+                    statusBadge = '<span class="building-status locked">🔒 Требуется ратуша 1</span>';
+                } else {
+                    statusClass = 'unavailable';
+                    statusBadge = '<span class="building-status">🚫 Не построено</span>';
+                }
             } else {
-                statusClass = 'available';
-                statusBadge = `<span class="building-status built">🏗️ Ур. ${level}</span>`;
+                // Здание построено - проверяем, не превышает ли уровень ратушу
+                if (!isBuildingAvailable(buildingId, level)) {
+                    statusClass = 'locked';
+                    statusBadge = `<span class="building-status locked">🔒 Ур.${level} (требуется ратуша ${level})</span>`;
+                } else {
+                    statusClass = 'available';
+                    statusBadge = `<span class="building-status built">🏗️ Ур. ${level}</span>`;
+                }
             }
             
             // Текущий доход
@@ -1028,65 +1098,71 @@
                 if (currentIncome.food > 0) incomeParts.push(`🌾+${currentIncome.food * count}`);
                 if (currentIncome.wood > 0) incomeParts.push(`🪵+${currentIncome.wood * count}`);
                 if (currentIncome.stone > 0) incomeParts.push(`⛰️+${currentIncome.stone * count}`);
+                if (currentIncome.gold > 0) incomeParts.push(`🪙+${currentIncome.gold * count}`);
                 if (incomeParts.length > 0) {
-                    incomeText = `<div class="building-income">📊 Сейчас: ${incomeParts.join(' ')}/ч</div>`;
+                    incomeText = `<div class="building-income">📊 Доход: ${incomeParts.join(' ')}/ч</div>`;
                 }
             }
             
             // Доход на следующем уровне
             let nextIncomeText = '';
             let upgradeBtn = '';
+            let canUpgradeNow = false;
             
-            if (isUnlocked && level > 0 && level < config.maxLevel) {
+            if (level > 0 && level < config.maxLevel) {
+                // Проверяем, доступен ли следующий уровень
+                const nextLevelAvailable = isBuildingAvailable(buildingId, level + 1);
                 const nextIncome = getBuildingIncome(buildingId, level + 1);
                 const cost = getUpgradeCost(buildingId, level);
-                const canUpgradeNow = canUpgrade(buildingId, level);
+                canUpgradeNow = canUpgrade(buildingId, level) && nextLevelAvailable;
                 
                 let nextIncomeParts = [];
                 if (nextIncome.food > 0) nextIncomeParts.push(`🌾+${nextIncome.food}`);
                 if (nextIncome.wood > 0) nextIncomeParts.push(`🪵+${nextIncome.wood}`);
                 if (nextIncome.stone > 0) nextIncomeParts.push(`⛰️+${nextIncome.stone}`);
+                if (nextIncome.gold > 0) nextIncomeParts.push(`🪙+${nextIncome.gold}`);
                 
                 if (nextIncomeParts.length > 0) {
-                    nextIncomeText = `<div class="building-next-income">📈 След. ур: ${nextIncomeParts.join(' ')}/ч</div>`;
+                    nextIncomeText = `<div class="building-next-income">📈 Доход Ур.${level+1}: ${nextIncomeParts.join(' ')}/ч</div>`;
+                }
+                
+                let buttonClass = canUpgradeNow ? 'building-upgrade-btn available' : 'building-upgrade-btn unavailable';
+                let requirementText = '';
+                if (!nextLevelAvailable) {
+                    requirementText = ` (треб. ратуша ${level+1})`;
                 }
                 
                 upgradeBtn = `
-                    <button class="building-upgrade-btn" onclick="upgradeBuilding('${buildingId}')" 
+                    <button class="${buttonClass}" onclick="upgradeBuilding('${buildingId}')" 
                             ${!canUpgradeNow ? 'disabled' : ''}>
-                        Улучшить до Ур.${level + 1} (🪙${cost.gold} 🪵${cost.wood})
+                        Улучшить до Ур.${level + 1}${requirementText} (🪙${cost.gold} 🪵${cost.wood}${cost.stone > 0 ? ` ⛰️${cost.stone}` : ''})
                     </button>
                 `;
-            } else if (isUnlocked && level === 0) {
+            } else if (level === 0) {
                 // Можно построить
                 const cost = config.baseCost;
-                const canBuildNow = userData.gold >= cost.gold && userData.wood >= cost.wood;
+                const canBuildNow = userData.gold >= cost.gold && userData.wood >= cost.wood && 
+                                    isBuildingAvailable(buildingId, 1);
                 const firstLevelIncome = getBuildingIncome(buildingId, 1);
                 
                 let incomeParts = [];
                 if (firstLevelIncome.food > 0) incomeParts.push(`🌾+${firstLevelIncome.food}`);
                 if (firstLevelIncome.wood > 0) incomeParts.push(`🪵+${firstLevelIncome.wood}`);
                 if (firstLevelIncome.stone > 0) incomeParts.push(`⛰️+${firstLevelIncome.stone}`);
+                if (firstLevelIncome.gold > 0) incomeParts.push(`🪙+${firstLevelIncome.gold}`);
                 
                 if (incomeParts.length > 0) {
-                    nextIncomeText = `<div class="building-next-income">📈 Будет: ${incomeParts.join(' ')}/ч</div>`;
+                    nextIncomeText = `<div class="building-next-income">📈 Доход: ${incomeParts.join(' ')}/ч</div>`;
                 }
                 
+                let buttonClass = canBuildNow ? 'building-upgrade-btn available' : 'building-upgrade-btn unavailable';
+                
                 upgradeBtn = `
-                    <button class="building-upgrade-btn" onclick="build('${buildingId}')" 
+                    <button class="${buttonClass}" onclick="build('${buildingId}')" 
                             ${!canBuildNow ? 'disabled' : ''}>
                         Построить (🪙${cost.gold} 🪵${cost.wood})
                     </button>
                 `;
-            } else if (!isUnlocked) {
-                nextIncomeText = `<div class="building-lock-reason">🔒 Требуется ратуша ${config.requiredTownHall}</div>`;
-            }
-            
-            // Стоимость улучшения
-            let costText = '';
-            if (level > 0) {
-                const cost = getUpgradeCost(buildingId, level);
-                costText = `<div class="building-cost">🪙${cost.gold} 🪵${cost.wood}</div>`;
             }
             
             return `
@@ -1108,12 +1184,24 @@
         
         // Улучшение ратуши
         async function upgradeTownHall() {
-            showToast('🏛️ Улучшение ратуши в разработке');
+            if (userData.townHallLevel >= 5) {
+                showToast('🏛️ Ратуша уже макс. уровня');
+                return;
+            }
+            
+            const cost = getUpgradeCost('townhall', userData.townHallLevel);
+            
+            if (userData.gold < cost.gold || userData.wood < cost.wood || userData.stone < cost.stone) {
+                showToast('❌ Не хватает ресурсов');
+                return;
+            }
+            
+            await performAction('upgrade_townhall', {});
         }
         
         // Постройка здания
         async function build(buildingId) {
-            if (!isBuildingAvailable(buildingId)) {
+            if (!isBuildingAvailable(buildingId, 1)) {
                 showToast('❌ Здание ещё не доступно');
                 return;
             }
@@ -1130,7 +1218,7 @@
             }
             
             if (!canUpgrade(buildingId, level)) {
-                showToast('❌ Не хватает ресурсов или макс. уровень');
+                showToast('❌ Не хватает ресурсов или требуется выше уровень ратуши');
                 return;
             }
             
