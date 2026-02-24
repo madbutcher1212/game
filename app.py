@@ -7,7 +7,7 @@ from datetime import datetime
 app = Flask(__name__)
 
 # ========== ВАШ URL ИЗ SHEETY ==========
-SHEETY_URL = "https://api.sheety.co/ваш_ключ/cityBuilderDb"
+SHEETY_URL = "https://api.sheety.co/3c7a64d22736a2e2d72dfc25150c8cd8/cityBuilderDb"
 # ========================================
 
 @app.route('/')
@@ -146,3 +146,4 @@ def top_clans():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
+
