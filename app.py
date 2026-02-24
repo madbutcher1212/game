@@ -6,6 +6,7 @@ import hmac
 import hashlib
 from urllib.parse import parse_qs
 from datetime import datetime
+import time
 
 app = Flask(__name__)
 
@@ -19,7 +20,7 @@ BOT_TOKEN = "8596066162:AAEm2DSAFhKemedKC8rT4RfFY4fjUhVBCvI"
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 # ================================
 
-# Доход ратуши по уровням
+# Доход ратуши по уровням (уровень игрока = уровень ратуши)
 TOWN_HALL_INCOME = {
     1: 5,
     2: 10,
@@ -28,7 +29,7 @@ TOWN_HALL_INCOME = {
     5: 100
 }
 
-# Стоимость улучшения ратуши
+# Стоимость улучшения ратуши (уровня игрока)
 TOWN_HALL_UPGRADE_COST = {
     2: {"gold": 50, "wood": 20, "stone": 0},
     3: {"gold": 300, "wood": 100, "stone": 30},
@@ -213,8 +214,20 @@ def auth():
             if player.get('buildings'):
                 try:
                     buildings = json.loads(player.get('buildings'))
+                    if not isinstance(buildings, list):
+                        buildings = []
                 except:
                     buildings = []
+            
+            # Проверяем, есть ли колонка last_collection
+            last_collection = player.get('last_collection')
+            if last_collection is None:
+                last_collection = int(time.time() * 1000)
+                # Обновляем в БД
+                supabase.table("players") \
+                    .update({'last_collection': last_collection}) \
+                    .eq('id', player['id']) \
+                    .execute()
             
             return jsonify({
                 'success': True,
@@ -227,19 +240,20 @@ def auth():
                     'food': player.get('food', 50),
                     'stone': player.get('stone', 0),
                     'level': player.get('level', 1),
-                    'townHallLevel': player.get('town_hall_level', 1),
-                    'lastCollection': player.get('last_collection', datetime.now().timestamp() * 1000)
+                    'lastCollection': last_collection
                 },
                 'buildings': buildings,
                 'config': BUILDINGS_CONFIG
             })
         else:
             # Создаем нового игрока с начальными постройками
-            initial_buildings = json.dumps([
+            initial_buildings = [
                 {"id": "house", "count": 1, "level": 1},
                 {"id": "farm", "count": 1, "level": 1},
                 {"id": "lumber", "count": 1, "level": 1}
-            ])
+            ]
+            
+            now = int(time.time() * 1000)
             
             new_player = {
                 'telegram_id': telegram_id,
@@ -250,9 +264,8 @@ def auth():
                 'food': 50,
                 'stone': 0,
                 'level': 1,
-                'town_hall_level': 1,
-                'buildings': initial_buildings,
-                'last_collection': datetime.now().timestamp() * 1000
+                'buildings': json.dumps(initial_buildings),
+                'last_collection': now
             }
             
             supabase.table("players").insert(new_player).execute()
@@ -268,10 +281,9 @@ def auth():
                     'food': 50,
                     'stone': 0,
                     'level': 1,
-                    'townHallLevel': 1,
-                    'lastCollection': datetime.now().timestamp() * 1000
+                    'lastCollection': now
                 },
-                'buildings': json.loads(initial_buildings),
+                'buildings': initial_buildings,
                 'config': BUILDINGS_CONFIG
             })
             
@@ -311,28 +323,35 @@ def game_action():
         wood = player['wood']
         food = player.get('food', 50)
         stone = player.get('stone', 0)
-        town_hall_level = player.get('town_hall_level', 1)
-        last_collection = player.get('last_collection', datetime.now().timestamp() * 1000)
+        level = player['level']  # уровень игрока = уровень ратуши
+        game_login = player.get('game_login', '')
         
         # Загружаем постройки
         buildings = []
         if player.get('buildings'):
             try:
                 buildings = json.loads(player.get('buildings'))
+                if not isinstance(buildings, list):
+                    buildings = []
             except:
                 buildings = []
+        
+        # Получаем время последнего сбора
+        last_collection = player.get('last_collection')
+        if last_collection is None:
+            last_collection = int(time.time() * 1000)
         
         response_data = {'success': True}
         
         # Обработка действий
         if action_type == 'collect':
             # Сбор ресурсов
-            now = datetime.now().timestamp() * 1000
+            now = int(time.time() * 1000)
             time_passed = now - last_collection
             hours_passed = time_passed / (60 * 60 * 1000)
             
             if hours_passed > 0:
-                income = calculate_hourly_income(buildings, town_hall_level)
+                income = calculate_hourly_income(buildings, level)
                 
                 gold += int(income["gold"] * hours_passed)
                 wood += int(income["wood"] * hours_passed)
@@ -358,7 +377,8 @@ def game_action():
                 'wood': wood,
                 'food': food,
                 'stone': stone,
-                'townHallLevel': town_hall_level,
+                'level': level,
+                'game_login': game_login,
                 'buildings': buildings,
                 'lastCollection': last_collection
             }
@@ -411,7 +431,8 @@ def game_action():
                 'wood': wood,
                 'food': food,
                 'stone': stone,
-                'townHallLevel': town_hall_level,
+                'level': level,
+                'game_login': game_login,
                 'buildings': buildings,
                 'lastCollection': last_collection
             }
@@ -435,9 +456,9 @@ def game_action():
             if current_level >= BUILDINGS_CONFIG[building_id]["max_level"]:
                 return jsonify({'success': False, 'error': 'Max level reached'})
             
-            # Проверяем уровень ратуши
-            if town_hall_level < current_level + 1:
-                return jsonify({'success': False, 'error': f'Town hall level {current_level + 1} required'})
+            # Проверяем уровень игрока (ратуши)
+            if level < current_level + 1:
+                return jsonify({'success': False, 'error': f'Требуется уровень {current_level + 1}'})
             
             # Рассчитываем стоимость
             cost = calculate_building_cost(building_id, current_level)
@@ -469,17 +490,18 @@ def game_action():
                 'wood': wood,
                 'food': food,
                 'stone': stone,
-                'townHallLevel': town_hall_level,
+                'level': level,
+                'game_login': game_login,
                 'buildings': buildings,
                 'lastCollection': last_collection
             }
             
-        elif action_type == 'upgrade_townhall':
-            # Улучшение ратуши
-            if town_hall_level >= 5:
-                return jsonify({'success': False, 'error': 'Town hall already max level'})
+        elif action_type == 'upgrade_level':
+            # Улучшение уровня игрока (ратуши)
+            if level >= 5:
+                return jsonify({'success': False, 'error': 'Максимальный уровень'})
             
-            cost = TOWN_HALL_UPGRADE_COST.get(town_hall_level + 1, {})
+            cost = TOWN_HALL_UPGRADE_COST.get(level + 1, {})
             
             if gold < cost.get('gold', 0) or wood < cost.get('wood', 0) or stone < cost.get('stone', 0):
                 return jsonify({'success': False, 'error': 'Not enough resources'})
@@ -487,14 +509,14 @@ def game_action():
             gold -= cost.get('gold', 0)
             wood -= cost.get('wood', 0)
             stone -= cost.get('stone', 0)
-            town_hall_level += 1
+            level += 1
             
             supabase.table("players") \
                 .update({
                     'gold': gold,
                     'wood': wood,
                     'stone': stone,
-                    'town_hall_level': town_hall_level
+                    'level': level
                 }) \
                 .eq('id', player_id) \
                 .execute()
@@ -504,7 +526,8 @@ def game_action():
                 'wood': wood,
                 'food': food,
                 'stone': stone,
-                'townHallLevel': town_hall_level,
+                'level': level,
+                'game_login': game_login,
                 'buildings': buildings,
                 'lastCollection': last_collection
             }
@@ -527,7 +550,7 @@ def game_action():
                 'wood': wood,
                 'food': food,
                 'stone': stone,
-                'townHallLevel': town_hall_level,
+                'level': level,
                 'buildings': buildings,
                 'lastCollection': last_collection
             }
