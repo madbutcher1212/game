@@ -206,7 +206,10 @@ def auth():
             .eq("telegram_id", telegram_id) \
             .execute()
         
+        now = int(time.time() * 1000)
+        
         if result.data and len(result.data) > 0:
+            # Пользователь найден
             player = result.data[0]
             
             # Загружаем постройки
@@ -219,15 +222,12 @@ def auth():
                 except:
                     buildings = []
             
-            # Проверяем, есть ли колонка last_collection
-            last_collection = player.get('last_collection')
-            if last_collection is None:
-                last_collection = int(time.time() * 1000)
-                # Обновляем в БД
-                supabase.table("players") \
-                    .update({'last_collection': last_collection}) \
-                    .eq('id', player['id']) \
-                    .execute()
+            # ВАЖНО: Обновляем last_collection до текущего времени
+            # Это гарантирует, что таймер начнет отсчет заново при каждом входе
+            supabase.table("players") \
+                .update({'last_collection': now}) \
+                .eq('id', player['id']) \
+                .execute()
             
             return jsonify({
                 'success': True,
@@ -240,20 +240,18 @@ def auth():
                     'food': player.get('food', 50),
                     'stone': player.get('stone', 0),
                     'level': player.get('level', 1),
-                    'lastCollection': last_collection
+                    'lastCollection': now
                 },
                 'buildings': buildings,
                 'config': BUILDINGS_CONFIG
             })
         else:
-            # Создаем нового игрока с начальными постройками
+            # Создаем нового игрока
             initial_buildings = [
                 {"id": "house", "count": 1, "level": 1},
                 {"id": "farm", "count": 1, "level": 1},
                 {"id": "lumber", "count": 1, "level": 1}
             ]
-            
-            now = int(time.time() * 1000)
             
             new_player = {
                 'telegram_id': telegram_id,
@@ -591,3 +589,4 @@ def top_clans():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
+
