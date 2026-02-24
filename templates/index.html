@@ -33,7 +33,7 @@
             height: fit-content;
         }
         
-        /* Верхний бар (всегда виден) */
+        /* Верхний бар */
         .top-bar {
             display: flex;
             align-items: center;
@@ -61,7 +61,7 @@
         
         .user-info {
             flex: 1;
-            min-width: 0; /* Для обрезки текста */
+            min-width: 0;
         }
         
         .name-level {
@@ -77,7 +77,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 120px; /* Ограничиваем ширину ника */
+            max-width: 120px;
         }
         
         .level-badge {
@@ -100,7 +100,6 @@
             max-width: 140px;
         }
         
-        /* Ресурсы в баре */
         .resources-bar {
             display: flex;
             gap: 8px;
@@ -119,18 +118,88 @@
             white-space: nowrap;
         }
         
-        .resource-item span:last-child {
-            color: #333;
+        /* Стили для города */
+        .city-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 15px;
         }
         
-        /* Контент вкладок */
-        .tab-content {
-            min-height: 300px;
-            margin-bottom: 12px;
+        /* Ратуша (главное здание) */
+        .town-hall {
+            background: linear-gradient(135deg, #f5e6d3, #e6d5b8);
+            border: 3px solid #b5946e;
+            border-radius: 16px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
         
-        /* Город (постройки) */
-        .buildings {
+        .town-hall:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+        }
+        
+        .town-hall-icon {
+            font-size: 48px;
+        }
+        
+        .town-hall-info {
+            flex: 1;
+        }
+        
+        .town-hall-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #5d3a1a;
+            margin-bottom: 4px;
+        }
+        
+        .town-hall-level {
+            font-size: 14px;
+            color: #8b6b42;
+            margin-bottom: 4px;
+        }
+        
+        .town-hall-desc {
+            font-size: 12px;
+            color: #a58e71;
+        }
+        
+        .town-hall-level-badge {
+            background: #b5946e;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        /* Секции построек */
+        .buildings-section {
+            background: #f8f8f8;
+            border-radius: 12px;
+            padding: 12px;
+        }
+        
+        .section-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .buildings-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 8px;
@@ -149,11 +218,18 @@
         .building.available {
             border-color: #4CAF50;
             background: #e8f5e8;
-            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
         }
         
         .building.unavailable {
             opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(0.5);
+        }
+        
+        .building.locked {
+            border-color: #ff9800;
+            background: #fff3e0;
+            opacity: 0.7;
             cursor: not-allowed;
         }
         
@@ -168,15 +244,23 @@
             margin-bottom: 4px;
         }
         
-        .building-cost {
+        .building-level {
             font-size: 12px;
-            color: #666;
-            margin-bottom: 4px;
+            color: #4CAF50;
+            font-weight: bold;
+            margin-bottom: 2px;
         }
         
-        .building-cost span {
-            display: inline-block;
-            margin-right: 4px;
+        .building-cost {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 2px;
+        }
+        
+        .building-lock-reason {
+            font-size: 11px;
+            color: #ff9800;
+            font-weight: bold;
         }
         
         .building-count {
@@ -185,7 +269,6 @@
             font-size: 13px;
         }
         
-        /* Кнопка сбора */
         .collect-btn {
             background: #4CAF50;
             color: white;
@@ -242,7 +325,7 @@
             font-size: 11px;
         }
         
-        /* Стили для других вкладок (пока пустые) */
+        /* Остальные вкладки */
         .empty-tab {
             text-align: center;
             padding: 40px 20px;
@@ -252,7 +335,6 @@
             border-radius: 12px;
         }
         
-        /* Кланы */
         .clan-section {
             background: #f8f8f8;
             border-radius: 12px;
@@ -332,12 +414,6 @@
             font-size: 36px;
             font-weight: bold;
         }
-        
-        .login-note {
-            font-size: 12px;
-            color: #999;
-            margin-top: 5px;
-        }
     </style>
 </head>
 <body>
@@ -348,13 +424,12 @@
             <h3>Добро пожаловать!</h3>
             <p>Придумайте имя в игре (до 12 символов):</p>
             <input type="text" id="newLogin" placeholder="Ваше игровое имя" maxlength="12">
-            <div class="login-note">Имя можно будет изменить позже в настройках</div>
-            <button class="collect-btn" id="confirmLogin" style="margin-top: 15px;">Начать игру</button>
+            <button class="collect-btn" id="confirmLogin">Начать игру</button>
         </div>
     </div>
 
     <div class="game">
-        <!-- Верхний бар (всегда виден) -->
+        <!-- Верхний бар -->
         <div class="top-bar">
             <div class="avatar" id="avatar">👤</div>
             <div class="user-info">
@@ -386,13 +461,52 @@
         
         <!-- Контент вкладок -->
         <div class="tab-content">
-            <!-- Вкладка Город (видна по умолчанию) -->
+            <!-- Вкладка Город -->
             <div id="tabCity" class="tab-pane active">
-                <div class="buildings" id="buildings"></div>
+                <div class="city-container" id="cityContainer">
+                    <!-- Ратуша -->
+                    <div class="town-hall" id="townHall" onclick="upgradeTownHall()">
+                        <div class="town-hall-icon">🏛️</div>
+                        <div class="town-hall-info">
+                            <div class="town-hall-name">Ратуша</div>
+                            <div class="town-hall-level">Уровень <span id="townHallLevel">1</span></div>
+                            <div class="town-hall-desc">Центр вашего города</div>
+                        </div>
+                        <div class="town-hall-level-badge" id="townHallLevelBadge">1</div>
+                    </div>
+                    
+                    <!-- Социальные постройки -->
+                    <div class="buildings-section">
+                        <div class="section-title">
+                            <span>🏘️</span> Социальные постройки
+                        </div>
+                        <div class="buildings-grid" id="socialBuildings"></div>
+                    </div>
+                    
+                    <!-- Экономические постройки -->
+                    <div class="buildings-section">
+                        <div class="section-title">
+                            <span>⚒️</span> Экономические постройки
+                        </div>
+                        <div class="buildings-grid" id="economicBuildings"></div>
+                    </div>
+                    
+                    <!-- Военные постройки -->
+                    <div class="buildings-section">
+                        <div class="section-title">
+                            <span>⚔️</span> Военные постройки
+                        </div>
+                        <div class="buildings-grid" id="militaryBuildings">
+                            <div style="grid-column: span 2; text-align: center; padding: 20px; color: #999;">
+                                Скоро будут доступны
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <button class="collect-btn" id="collectBtn">📦 Собрать ресурсы</button>
             </div>
             
-            <!-- Вкладка Армия (пустая) -->
+            <!-- Вкладка Армия -->
             <div id="tabArmy" class="tab-pane hidden">
                 <div class="empty-tab">
                     ⚔️ Армия в разработке<br>
@@ -400,7 +514,7 @@
                 </div>
             </div>
             
-            <!-- Вкладка Походы (пустая) -->
+            <!-- Вкладка Походы -->
             <div id="tabCampaign" class="tab-pane hidden">
                 <div class="empty-tab">
                     🗺️ Походы в разработке<br>
@@ -414,10 +528,8 @@
                     <h3 style="margin-bottom: 15px;">👥 Управление кланом</h3>
                     <input type="text" id="clanName" placeholder="Название клана" maxlength="20">
                     <input type="text" id="clanTag" placeholder="Тег (до 5 букв)" maxlength="5">
-                    <button class="collect-btn" id="createClanBtn" style="margin-top: 5px;">✨ Создать клан</button>
+                    <button class="collect-btn" id="createClanBtn">✨ Создать клан</button>
                     <button class="collect-btn" id="topClansBtn" style="margin-top: 5px; background: #9C27B0;">🏆 Топ кланов</button>
-                    
-                    <!-- Список топ кланов -->
                     <div id="topClans" style="margin-top: 15px;"></div>
                 </div>
             </div>
@@ -430,7 +542,7 @@
                     <div style="margin-bottom: 15px;">
                         <label style="font-weight: bold; display: block; margin-bottom: 5px;">Изменить имя</label>
                         <input type="text" id="changeNameInput" placeholder="Новое имя" maxlength="12">
-                        <button class="collect-btn" id="changeNameBtn" style="margin-top: 5px;">Сохранить</button>
+                        <button class="collect-btn" id="changeNameBtn">Сохранить</button>
                     </div>
                     
                     <div style="color: #666; font-size: 13px; text-align: center;">
@@ -465,14 +577,12 @@
         </div>
     </div>
     
-    <!-- Всплывающие уведомления -->
     <div class="toast" id="toast"></div>
 
     <script>
         // === НАСТРОЙКИ ===
         const API_URL = 'https://game-production-10ea.up.railway.app';
         
-        // Telegram Web App
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.ready();
@@ -486,14 +596,79 @@
             wood: 50,
             food: 50,
             stone: 0,
-            level: 1
+            level: 1,
+            townHallLevel: 1  // Уровень ратуши
         };
         
         // Постройки
-        let buildings = [];
+        let buildings = [
+            { id: 'house', count: 1, level: 1 },     // Жилой район 1 уровня
+            { id: 'farm', count: 1, level: 1 },      // Ферма 1 уровня
+            { id: 'lumber', count: 1, level: 1 }     // Лесопилка 1 уровня
+            // Каменоломни пока нет
+        ];
         
         // Конфиг зданий
-        let buildingsConfig = {};
+        const BUILDINGS_CONFIG = {
+            'house': {
+                name: 'Жилой район',
+                icon: '🏘️',
+                section: 'social',
+                baseLevel: 1,
+                cost_gold: 50,
+                cost_wood: 20,
+                cost_food: 0,
+                cost_stone: 0,
+                gold_prod: 0,
+                wood_prod: 0,
+                food_prod: 0,
+                stone_prod: 0,
+                population: 2
+            },
+            'farm': {
+                name: 'Ферма',
+                icon: '🌾',
+                section: 'economic',
+                baseLevel: 1,
+                cost_gold: 30,
+                cost_wood: 40,
+                cost_food: 0,
+                cost_stone: 0,
+                gold_prod: 0,
+                wood_prod: 0,
+                food_prod: 8,
+                stone_prod: 0
+            },
+            'lumber': {
+                name: 'Лесопилка',
+                icon: '🪵',
+                section: 'economic',
+                baseLevel: 1,
+                cost_gold: 40,
+                cost_wood: 30,
+                cost_food: 0,
+                cost_stone: 0,
+                gold_prod: 0,
+                wood_prod: 4,
+                food_prod: 0,
+                stone_prod: 0
+            },
+            'quarry': {
+                name: 'Каменоломня',
+                icon: '⛰️',
+                section: 'economic',
+                baseLevel: 1,
+                requiredTownHall: 2,  // Доступна с 2 уровня ратуши
+                cost_gold: 60,
+                cost_wood: 40,
+                cost_food: 0,
+                cost_stone: 0,
+                gold_prod: 0,
+                wood_prod: 0,
+                food_prod: 0,
+                stone_prod: 3
+            }
+        };
         
         // Текущая вкладка
         let currentTab = 'city';
@@ -523,7 +698,6 @@
         }
         
         function updateUserInfo() {
-            // Обрезаем имя до 12 символов, если вдруг пришло больше
             let displayName = userData.game_login || 'Игрок';
             if (displayName.length > 12) {
                 displayName = displayName.substring(0, 12);
@@ -540,7 +714,6 @@
         function switchTab(tabId) {
             currentTab = tabId;
             
-            // Обновляем классы у вкладок
             document.querySelectorAll('.tab').forEach(tab => {
                 if (tab.dataset.tab === tabId) {
                     tab.classList.add('active');
@@ -549,62 +722,146 @@
                 }
             });
             
-            // Показываем нужный контент
             document.querySelectorAll('.tab-pane').forEach(pane => {
                 pane.classList.add('hidden');
             });
             document.getElementById(`tab${tabId.charAt(0).toUpperCase() + tabId.slice(1)}`).classList.remove('hidden');
         }
         
-        // ОБНОВЛЕНИЕ ИНТЕРФЕЙСА
-        function updateUI() {
-            // Обновляем ресурсы в баре
+        // Получить уровень здания
+        function getBuildingLevel(buildingId) {
+            const building = buildings.find(b => b.id === buildingId);
+            return building ? building.level : 0;
+        }
+        
+        // Проверить, доступно ли здание
+        function isBuildingAvailable(buildingId) {
+            const config = BUILDINGS_CONFIG[buildingId];
+            if (!config) return false;
+            
+            // Проверяем требование к ратуше
+            if (config.requiredTownHall && userData.townHallLevel < config.requiredTownHall) {
+                return false;
+            }
+            
+            // Проверяем, построено ли уже (для зданий с baseLevel)
+            const building = buildings.find(b => b.id === buildingId);
+            if (config.baseLevel && !building) {
+                return false;  // Если здание должно быть по умолчанию, а его нет
+            }
+            
+            return true;
+        }
+        
+        // Проверить, можно ли построить/улучшить
+        function canBuild(buildingId) {
+            const config = BUILDINGS_CONFIG[buildingId];
+            if (!config) return false;
+            
+            // Проверяем доступность
+            if (!isBuildingAvailable(buildingId)) return false;
+            
+            // Проверяем ресурсы
+            return userData.gold >= config.cost_gold &&
+                   userData.wood >= config.cost_wood &&
+                   userData.food >= config.cost_food &&
+                   userData.stone >= config.cost_stone;
+        }
+        
+        // Обновление UI города
+        function updateCityUI() {
+            // Обновляем ресурсы
             document.getElementById('goldBar').textContent = userData.gold;
             document.getElementById('woodBar').textContent = userData.wood;
             document.getElementById('foodBar').textContent = userData.food;
             document.getElementById('stoneBar').textContent = userData.stone;
             
-            // Обновляем только если открыта вкладка города
-            if (currentTab === 'city') {
-                let buildingsHtml = '';
-                
-                if (buildingsConfig && Object.keys(buildingsConfig).length > 0) {
-                    Object.keys(buildingsConfig).forEach(buildingId => {
-                        const config = buildingsConfig[buildingId];
-                        const building = buildings.find(b => b.id === buildingId);
-                        const count = building ? building.count : 0;
-                        
-                        const canBuild = 
-                            userData.gold >= (config.cost_gold || 0) &&
-                            userData.wood >= (config.cost_wood || 0) &&
-                            userData.food >= (config.cost_food || 0) &&
-                            userData.stone >= (config.cost_stone || 0);
-                        
-                        let costText = '';
-                        if (config.cost_gold > 0) costText += `🪙${config.cost_gold} `;
-                        if (config.cost_wood > 0) costText += `🪵${config.cost_wood} `;
-                        if (config.cost_food > 0) costText += `🌾${config.cost_food} `;
-                        if (config.cost_stone > 0) costText += `⛰️${config.cost_stone} `;
-                        
-                        buildingsHtml += `
-                            <div class="building ${canBuild ? 'available' : 'unavailable'}" 
-                                 onclick="build('${buildingId}')">
-                                <div class="building-icon">${config.icon || '🏗️'}</div>
-                                <div class="building-name">${config.name || buildingId}</div>
-                                <div class="building-cost">${costText}</div>
-                                <div class="building-count">${count}</div>
-                            </div>
-                        `;
-                    });
-                } else {
-                    buildingsHtml = '<div style="grid-column: span 2; text-align: center; padding: 20px;">Загрузка...</div>';
-                }
-                
-                document.getElementById('buildings').innerHTML = buildingsHtml;
-            }
+            // Обновляем ратушу
+            document.getElementById('townHallLevel').textContent = userData.townHallLevel;
+            document.getElementById('townHallLevelBadge').textContent = userData.townHallLevel;
+            
+            // Социальные постройки
+            let socialHtml = '';
+            // Жилой район
+            const houseLevel = getBuildingLevel('house');
+            socialHtml += generateBuildingHTML('house', houseLevel);
+            
+            // TODO: другие социальные постройки
+            
+            document.getElementById('socialBuildings').innerHTML = socialHtml;
+            
+            // Экономические постройки
+            let economicHtml = '';
+            
+            // Ферма
+            const farmLevel = getBuildingLevel('farm');
+            economicHtml += generateBuildingHTML('farm', farmLevel);
+            
+            // Лесопилка
+            const lumberLevel = getBuildingLevel('lumber');
+            economicHtml += generateBuildingHTML('lumber', lumberLevel);
+            
+            // Каменоломня (проверяем доступность)
+            const quarryAvailable = isBuildingAvailable('quarry');
+            const quarryLevel = getBuildingLevel('quarry');
+            economicHtml += generateBuildingHTML('quarry', quarryLevel, quarryAvailable);
+            
+            document.getElementById('economicBuildings').innerHTML = economicHtml;
         }
         
-        // ОТПРАВКА ДЕЙСТВИЯ НА СЕРВЕР
+        // Генерация HTML для здания
+        function generateBuildingHTML(buildingId, level, isAvailable = true) {
+            const config = BUILDINGS_CONFIG[buildingId];
+            if (!config) return '';
+            
+            const canBuildNow = canBuild(buildingId);
+            const isUnlocked = isAvailable;
+            
+            let statusClass = '';
+            let statusText = '';
+            
+            if (!isUnlocked) {
+                statusClass = 'locked';
+                statusText = `<div class="building-lock-reason">🔒 Ратуша ${config.requiredTownHall}</div>`;
+            } else if (level === 0) {
+                statusClass = canBuildNow ? 'available' : 'unavailable';
+            } else {
+                statusClass = canBuildNow ? 'available' : 'unavailable';
+            }
+            
+            let costText = '';
+            if (config.cost_gold > 0) costText += `🪙${config.cost_gold} `;
+            if (config.cost_wood > 0) costText += `🪵${config.cost_wood} `;
+            
+            return `
+                <div class="building ${statusClass}" 
+                     onclick="${isUnlocked ? `build('${buildingId}')` : ''}">
+                    <div class="building-icon">${config.icon}</div>
+                    <div class="building-name">${config.name}</div>
+                    ${level > 0 ? `<div class="building-level">Ур. ${level}</div>` : ''}
+                    <div class="building-cost">${costText}</div>
+                    ${statusText}
+                </div>
+            `;
+        }
+        
+        // Улучшение ратуши
+        async function upgradeTownHall() {
+            // TODO: добавить на сервер
+            showToast('🏛️ Улучшение ратуши в разработке');
+        }
+        
+        // Постройка/улучшение
+        async function build(buildingId) {
+            if (!isBuildingAvailable(buildingId)) {
+                showToast('❌ Здание ещё не доступно');
+                return;
+            }
+            
+            await performAction('build', { building_id: buildingId });
+        }
+        
+        // Отправка действия на сервер
         async function performAction(action, data = {}) {
             try {
                 const response = await fetch(`${API_URL}/api/action`, {
@@ -629,6 +886,9 @@
                             userData.level = result.state.level;
                             document.getElementById('levelBadge').textContent = userData.level;
                         }
+                        if (result.state.townHallLevel !== undefined) {
+                            userData.townHallLevel = result.state.townHallLevel;
+                        }
                         if (result.state.game_login !== undefined) {
                             userData.game_login = result.state.game_login;
                             updateUserInfo();
@@ -636,7 +896,7 @@
                         if (result.state.buildings) {
                             buildings = result.state.buildings;
                         }
-                        updateUI();
+                        updateCityUI();
                     }
                     return true;
                 } else {
@@ -650,7 +910,7 @@
             }
         }
         
-        // АВТОРИЗАЦИЯ
+        // Авторизация
         async function login() {
             try {
                 const response = await fetch(`${API_URL}/api/auth`, {
@@ -658,10 +918,6 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ initData: tg.initData })
                 });
-                
-                if (!response.ok) {
-                    throw new Error('Ошибка сервера');
-                }
                 
                 const data = await response.json();
                 
@@ -674,12 +930,16 @@
                     userData.food = data.user.food || 50;
                     userData.stone = data.user.stone || 0;
                     userData.level = data.user.level;
+                    userData.townHallLevel = data.user.townHallLevel || 1;
                     
-                    buildings = data.buildings || [];
-                    buildingsConfig = data.config || {};
+                    buildings = data.buildings || [
+                        { id: 'house', level: 1 },
+                        { id: 'farm', level: 1 },
+                        { id: 'lumber', level: 1 }
+                    ];
                     
                     updateUserInfo();
-                    updateUI();
+                    updateCityUI();
                     
                     if (!userData.game_login) {
                         document.getElementById('loginOverlay').style.display = 'flex';
@@ -691,17 +951,12 @@
             }
         }
         
-        // ПОСТРОЙКА
-        async function build(buildingId) {
-            await performAction('build', { building_id: buildingId });
-        }
-        
-        // СБОР РЕСУРСОВ
+        // Сбор ресурсов
         async function collectResources() {
             await performAction('collect');
         }
         
-        // СОХРАНЕНИЕ ИМЕНИ (первый вход)
+        // Сохранение имени (первый вход)
         async function saveGameLogin() {
             const loginInput = document.getElementById('newLogin');
             let newLogin = loginInput.value.trim();
@@ -711,7 +966,6 @@
                 return;
             }
             
-            // Обрезаем до 12 символов
             if (newLogin.length > 12) {
                 newLogin = newLogin.substring(0, 12);
             }
@@ -724,7 +978,7 @@
             }
         }
         
-        // ИЗМЕНЕНИЕ ИМЕНИ (в настройках)
+        // Изменение имени (в настройках)
         async function changeName() {
             const nameInput = document.getElementById('changeNameInput');
             let newName = nameInput.value.trim();
@@ -746,7 +1000,7 @@
             }
         }
         
-        // КЛАНЫ
+        // Кланы
         async function createClan() {
             const name = document.getElementById('clanName').value.trim();
             const tag = document.getElementById('clanTag').value.trim();
@@ -799,8 +1053,6 @@
                     });
                 }
                 
-                html += '<button class="collect-btn" onclick="document.getElementById(\'topClans\').innerHTML = \'\'" style="margin-top:10px;">Закрыть</button>';
-                
                 document.getElementById('topClans').innerHTML = html;
             } catch (error) {
                 showToast('❌ Ошибка');
@@ -811,21 +1063,18 @@
         document.addEventListener('DOMContentLoaded', () => {
             login();
             
-            // Переключение вкладок
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.addEventListener('click', () => {
                     switchTab(tab.dataset.tab);
                 });
             });
             
-            // Кнопки действий
             document.getElementById('collectBtn').addEventListener('click', collectResources);
             document.getElementById('createClanBtn').addEventListener('click', createClan);
             document.getElementById('topClansBtn').addEventListener('click', showTopClans);
             document.getElementById('confirmLogin').addEventListener('click', saveGameLogin);
             document.getElementById('changeNameBtn').addEventListener('click', changeName);
             
-            // По умолчанию показываем город
             switchTab('city');
         });
     </script>
