@@ -105,36 +105,37 @@
             max-width: 140px;
         }
         
-        /* Новый двухстрочный ресурс-бар */
-        .resources-container {
+        /* Компактный ресурс-бар справа */
+        .resources-compact {
             background: #f0f0f0;
             border-radius: 16px;
-            padding: 8px 12px;
-            margin-top: 8px;
+            padding: 6px 10px;
+            min-width: 140px;
         }
         
         .resources-row {
             display: flex;
-            justify-content: space-around;
+            justify-content: space-between;
             align-items: center;
+            gap: 8px;
         }
         
         .resources-row:first-child {
-            margin-bottom: 6px;
-            padding-bottom: 6px;
+            margin-bottom: 4px;
+            padding-bottom: 4px;
             border-bottom: 1px dashed #ccc;
         }
         
         .resource-block {
             display: flex;
             align-items: center;
-            gap: 4px;
-            font-size: 15px;
+            gap: 3px;
+            font-size: 13px;
             font-weight: bold;
         }
         
         .resource-icon {
-            font-size: 18px;
+            font-size: 14px;
         }
         
         .resource-value {
@@ -142,28 +143,9 @@
         }
         
         .resource-income-small {
-            font-size: 11px;
+            font-size: 10px;
             color: #4CAF50;
             margin-left: 2px;
-        }
-        
-        .population-progress {
-            font-size: 13px;
-            color: #666;
-        }
-        
-        .resource-row-three {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-        }
-        
-        .resource-item-small {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 14px;
-            font-weight: bold;
         }
         
         /* Контент с прокруткой */
@@ -544,40 +526,37 @@
                     </div>
                     <div class="user-login" id="userLogin">@username</div>
                 </div>
-            </div>
-            
-            <!-- Новый двухстрочный ресурс-бар -->
-            <div class="resources-container">
-                <!-- Первая строка: Монеты и Жители -->
-                <div class="resources-row">
-                    <div class="resource-block">
-                        <span class="resource-icon">🪙</span>
-                        <span class="resource-value" id="goldDisplay">100</span>
-                        <span class="resource-income-small" id="goldIncome">+0/ч</span>
-                    </div>
-                    <div class="resource-block">
-                        <span class="resource-icon">👥</span>
-                        <span class="resource-value" id="populationDisplay">10/20</span>
-                        <span class="resource-income-small" id="populationGrowth">+3/ч</span>
-                    </div>
-                </div>
                 
-                <!-- Вторая строка: Дерево, Камень, Еда -->
-                <div class="resource-row-three">
-                    <div class="resource-item-small">
-                        <span>🪵</span>
-                        <span id="woodDisplay">50</span>
-                        <span class="resource-income-small" id="woodIncome">+0/ч</span>
+                <!-- Компактный ресурс-бар справа -->
+                <div class="resources-compact">
+                    <div class="resources-row">
+                        <div class="resource-block">
+                            <span class="resource-icon">🪙</span>
+                            <span class="resource-value" id="goldDisplay">100</span>
+                            <span class="resource-income-small" id="goldIncome">+0</span>
+                        </div>
+                        <div class="resource-block">
+                            <span class="resource-icon">👥</span>
+                            <span class="resource-value" id="populationDisplay">10/20</span>
+                            <span class="resource-income-small" id="populationGrowth">+3</span>
+                        </div>
                     </div>
-                    <div class="resource-item-small">
-                        <span>⛰️</span>
-                        <span id="stoneDisplay">0</span>
-                        <span class="resource-income-small" id="stoneIncome">+0/ч</span>
-                    </div>
-                    <div class="resource-item-small">
-                        <span>🌾</span>
-                        <span id="foodDisplay">50</span>
-                        <span class="resource-income-small" id="foodIncome">+0/ч</span>
+                    <div class="resources-row">
+                        <div class="resource-block">
+                            <span class="resource-icon">🪵</span>
+                            <span class="resource-value" id="woodDisplay">50</span>
+                            <span class="resource-income-small" id="woodIncome">+0</span>
+                        </div>
+                        <div class="resource-block">
+                            <span class="resource-icon">⛰️</span>
+                            <span class="resource-value" id="stoneDisplay">0</span>
+                            <span class="resource-income-small" id="stoneIncome">+0</span>
+                        </div>
+                        <div class="resource-block">
+                            <span class="resource-icon">🌾</span>
+                            <span class="resource-value" id="foodDisplay">50</span>
+                            <span class="resource-income-small" id="foodIncome">+0</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -602,7 +581,7 @@
                                 <div class="town-hall-name">Ратуша</div>
                                 <div class="town-hall-income" id="townHallIncome">+5 🪙/ч</div>
                                 <div class="town-hall-level">Уровень <span id="townHallLevel">1</span>/5</div>
-                                <div class="town-hall-next" id="townHallNext">⬆️ +10 🪙/ч</div>
+                                <div class="town-hall-next" id="townHallNext">⬆️ Улучшить</div>
                             </div>
                             <div class="town-hall-level-badge" id="townHallLevelBadge">1</div>
                         </div>
@@ -733,13 +712,13 @@
             { id: 'lumber', count: 1, level: 1 }
         ];
         
-        const TOWN_HALL_INCOME = {1:5,2:10,3:25,4:50,5:100};
+        const TOWN_HALL_INCOME = {1:5,2:10,3:20,4:45,5:100};
         
         const TOWN_HALL_UPGRADE_COST = {
-            2: {gold:50,wood:20,stone:0},
-            3: {gold:300,wood:100,stone:30},
-            4: {gold:1000,wood:250,stone:100},
-            5: {gold:5000,wood:1000,stone:400}
+            2: {gold:50,wood:100,stone:0},
+            3: {gold:500,wood:400,stone:0},
+            4: {gold:2000,wood:1200,stone:250},
+            5: {gold:10000,wood:6000,stone:2500}
         };
         
         const BUILDINGS_CONFIG = {
@@ -747,10 +726,10 @@
                 name: 'Жилой район', icon: '🏘️', section: 'social', maxLevel: 5,
                 baseCost: {gold:50,wood:20,stone:0},
                 upgradeCosts: [
-                    {gold:80,wood:40,stone:0},
-                    {gold:200,wood:100,stone:0},
-                    {gold:550,wood:240,stone:0},
-                    {gold:1500,wood:520,stone:0}
+                    {gold:50,wood:100,stone:50},
+                    {gold:250,wood:300,stone:125},
+                    {gold:1500,wood:1000,stone:400},
+                    {gold:7200,wood:5300,stone:2450}
                 ],
                 populationBonus: [20,20,40,100,250]
             },
@@ -758,34 +737,34 @@
                 name: 'Ферма', icon: '🌾', section: 'economic', maxLevel: 5,
                 baseCost: {gold:30,wood:40,stone:0},
                 upgradeCosts: [
-                    {gold:60,wood:80,stone:0},
-                    {gold:120,wood:160,stone:0},
-                    {gold:240,wood:320,stone:0},
-                    {gold:480,wood:640,stone:0}
+                    {gold:50,wood:100,stone:0},
+                    {gold:250,wood:300,stone:0},
+                    {gold:1000,wood:1000,stone:150},
+                    {gold:5200,wood:6300,stone:2450}
                 ],
-                income: [{food:10},{food:20},{food:35},{food:55},{food:80}]
+                income: [{food:10},{food:25},{food:60},{food:120},{food:260}]
             },
             'lumber': {
                 name: 'Лесопилка', icon: '🪵', section: 'economic', maxLevel: 5,
                 baseCost: {gold:40,wood:30,stone:0},
                 upgradeCosts: [
-                    {gold:80,wood:60,stone:0},
-                    {gold:160,wood:120,stone:0},
-                    {gold:320,wood:240,stone:0},
-                    {gold:640,wood:480,stone:0}
+                    {gold:50,wood:100,stone:0},
+                    {gold:350,wood:200,stone:50},
+                    {gold:1300,wood:900,stone:550},
+                    {gold:7000,wood:4500,stone:3500}
                 ],
-                income: [{wood:10},{wood:20},{wood:35},{wood:55},{wood:80}]
+                income: [{wood:10},{wood:20},{wood:40},{wood:100},{wood:200}]
             },
             'quarry': {
                 name: 'Каменоломня', icon: '⛰️', section: 'economic', maxLevel: 5,
-                baseCost: {gold:60,wood:40,stone:0},
+                baseCost: {gold:20,wood:80,stone:0},
                 upgradeCosts: [
-                    {gold:120,wood:80,stone:20},
-                    {gold:240,wood:160,stone:50},
-                    {gold:480,wood:320,stone:120},
-                    {gold:960,wood:640,stone:250}
+                    {gold:50,wood:150,stone:0},
+                    {gold:250,wood:350,stone:100},
+                    {gold:1000,wood:1700,stone:150},
+                    {gold:6200,wood:7300,stone:1450}
                 ],
-                income: [{stone:3},{stone:7},{stone:12},{stone:18},{stone:25}]
+                income: [{stone:5},{stone:15},{stone:35},{stone:80},{stone:160}]
             }
         };
         
@@ -872,25 +851,23 @@
             const income = calculateHourlyIncome();
             
             document.getElementById('goldDisplay').textContent = userData.gold;
-            document.getElementById('goldIncome').textContent = `+${income.gold}/ч`;
+            document.getElementById('goldIncome').textContent = `+${income.gold}`;
             
             document.getElementById('woodDisplay').textContent = userData.wood;
-            document.getElementById('woodIncome').textContent = `+${income.wood}/ч`;
+            document.getElementById('woodIncome').textContent = `+${income.wood}`;
             
             document.getElementById('stoneDisplay').textContent = userData.stone;
-            document.getElementById('stoneIncome').textContent = `+${income.stone}/ч`;
+            document.getElementById('stoneIncome').textContent = `+${income.stone}`;
             
             document.getElementById('foodDisplay').textContent = userData.food;
-            document.getElementById('foodIncome').textContent = `+${income.food}/ч`;
+            document.getElementById('foodIncome').textContent = `+${income.food}`;
             
             document.getElementById('populationDisplay').textContent = 
                 `${userData.population_current}/${userData.population_max}`;
             
-            // Проверяем, хватает ли еды для роста населения
             const foodNeeded = userData.population_current;
-            const populationGrowth = income.food >= foodNeeded ? 3 : 0;
-            document.getElementById('populationGrowth').textContent = 
-                populationGrowth > 0 ? `+${populationGrowth}/ч` : '⚠️ нет еды';
+            const canGrow = income.food >= foodNeeded && userData.food > 0;
+            document.getElementById('populationGrowth').textContent = canGrow ? '+3' : '⚠️';
         }
         
         function updateTownHallDisplay() {
@@ -900,7 +877,6 @@
             document.getElementById('townHallLevelBadge').textContent = userData.level;
             
             if (userData.level < 5) {
-                const nextIncome = TOWN_HALL_INCOME[userData.level+1] || 0;
                 const cost = getUpgradeCost('townhall', userData.level);
                 document.getElementById('townHallNext').innerHTML = 
                     `⬆️ Улучшить (🪙${cost.gold} 🪵${cost.wood}${cost.stone>0 ? ` ⛰️${cost.stone}`:''})`;
@@ -977,7 +953,6 @@
             let bonusText = '';
             
             if (buildingId === 'house' && level > 0) {
-                // Для жилого района показываем бонус к лимиту
                 const totalBonus = config.populationBonus.slice(0, level).reduce((a,b)=>a+b,0);
                 bonusText = `<div class="building-income">👥 +${totalBonus} лимит</div>`;
             }
