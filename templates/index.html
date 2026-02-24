@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏰 Градострой</title>
+    <title>Rodstone War</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
@@ -30,10 +30,45 @@
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
         
-        h2 {
-            text-align: center;
+        /* Шапка с профилем */
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
             margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        
+        .user-info {
+            flex: 1;
+        }
+        
+        .user-name {
+            font-size: 18px;
+            font-weight: bold;
             color: #333;
+        }
+        
+        .user-login {
+            font-size: 14px;
+            color: #666;
+            margin-top: 2px;
         }
         
         .resources {
@@ -162,19 +197,75 @@
             z-index: 1000;
         }
         
-        .username {
+        /* Выбор логина */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        
+        .login-box {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 350px;
             text-align: center;
-            margin-bottom: 10px;
-            color: #666;
+        }
+        
+        .login-box h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .login-box input {
+            margin-bottom: 15px;
+            padding: 12px;
+        }
+        
+        .avatar-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 36px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
+    <!-- Окно выбора логина (показывается только при первом входе) -->
+    <div id="loginOverlay" class="login-overlay">
+        <div class="login-box">
+            <div class="avatar-preview" id="avatarPreview">👤</div>
+            <h3>Добро пожаловать!</h3>
+            <p>Придумайте имя в игре:</p>
+            <input type="text" id="newLogin" placeholder="Ваше игровое имя" maxlength="20">
+            <button class="button" id="confirmLogin">Начать игру</button>
+        </div>
+    </div>
+
     <div class="game">
-        <h2>🏰 Градострой</h2>
-        
-        <!-- Имя пользователя из Telegram -->
-        <div class="username" id="username"></div>
+        <!-- Шапка с профилем (вместо надписи Градострой) -->
+        <div class="header">
+            <div class="avatar" id="avatar">👤</div>
+            <div class="user-info">
+                <div class="user-name" id="userName">Загрузка...</div>
+                <div class="user-login" id="userLogin">@username</div>
+            </div>
+        </div>
         
         <!-- Ресурсы -->
         <div class="resources">
@@ -208,7 +299,6 @@
 
     <script>
         // === НАСТРОЙКИ ===
-        // ВАЖНО: замените на адрес вашего Railway сервера
         const API_URL = 'https://game-production-70a7.up.railway.app';
         
         // Telegram Web App
@@ -219,7 +309,9 @@
         // Данные пользователя
         let userData = {
             id: null,
-            username: '',
+            telegram_username: '',
+            first_name: '',
+            game_login: '',  // Игровой логин
             gold: 100,
             wood: 50,
             level: 1
@@ -233,9 +325,8 @@
             { id: 'market', name: '🏪 Рынок', icon: '🏪', costGold: 80, costWood: 60, goldProd: 10, woodProd: 2, count: 0 }
         ];
         
-        // === ФУНКЦИИ ДЛЯ РАБОТЫ С СЕРВЕРОМ ===
+        // === ФУНКЦИИ ===
         
-        // Показать всплывающее сообщение
         function showToast(message) {
             const toast = document.getElementById('toast');
             toast.textContent = message;
@@ -245,11 +336,65 @@
             }, 2000);
         }
         
-        // Авторизация при загрузке
+        // Получить первую букву для аватара
+        function getAvatarLetter() {
+            if (userData.game_login) {
+                return userData.game_login.charAt(0).toUpperCase();
+            }
+            if (userData.first_name) {
+                return userData.first_name.charAt(0).toUpperCase();
+            }
+            return '👤';
+        }
+        
+        // Обновить аватар
+        function updateAvatar() {
+            const letter = getAvatarLetter();
+            document.getElementById('avatar').textContent = letter;
+            document.getElementById('avatarPreview').textContent = letter;
+        }
+        
+        // Обновить информацию о пользователе
+        function updateUserInfo() {
+            document.getElementById('userName').textContent = userData.game_login || userData.first_name || 'Игрок';
+            document.getElementById('userLogin').textContent = '@' + (userData.telegram_username || 'username');
+            updateAvatar();
+        }
+        
+        // Проверка, нужно ли показать окно выбора логина
+        function checkFirstLogin() {
+            // Если нет игрового логина и это первый вход
+            if (!userData.game_login && userData.id) {
+                document.getElementById('loginOverlay').style.display = 'flex';
+            } else {
+                document.getElementById('loginOverlay').style.display = 'none';
+            }
+        }
+        
+        // Сохранение выбранного логина
+        async function saveGameLogin() {
+            const loginInput = document.getElementById('newLogin');
+            const newLogin = loginInput.value.trim();
+            
+            if (!newLogin) {
+                showToast('❌ Введите имя');
+                return;
+            }
+            
+            userData.game_login = newLogin;
+            updateUserInfo();
+            
+            // Скрываем окно
+            document.getElementById('loginOverlay').style.display = 'none';
+            
+            // Сохраняем в базу
+            await saveProgress();
+            showToast(`✅ Добро пожаловать, ${newLogin}!`);
+        }
+        
+        // Авторизация
         async function login() {
             try {
-                showToast('⏳ Загрузка...');
-                
                 const response = await fetch(`${API_URL}/api/auth`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -263,24 +408,32 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    userData = data.user;
-                    document.getElementById('username').textContent = `👤 ${userData.username || 'Игрок'}`;
-                    showToast('✅ Добро пожаловать!');
-                } else {
-                    showToast('⚠️ Ошибка входа, играем локально');
+                    userData.id = data.user.id;
+                    userData.telegram_username = data.user.username || 'user';
+                    userData.first_name = data.user.first_name || 'Игрок';
+                    userData.gold = data.user.gold;
+                    userData.wood = data.user.wood;
+                    userData.level = data.user.level;
+                    userData.game_login = data.user.game_login || ''; // Загружаем сохраненный логин
+                    
+                    updateUserInfo();
+                    checkFirstLogin();
                 }
             } catch (error) {
                 console.error('Auth error:', error);
                 showToast('⚠️ Играем без сохранения');
+                // Для теста
+                userData.id = 123456;
+                userData.telegram_username = 'test';
+                userData.first_name = 'Тест';
+                updateUserInfo();
             }
             
-            // В любом случае обновляем интерфейс
             updateUI();
         }
         
-        // Сохранение прогресса
+        // Сохранение
         async function saveProgress() {
-            // Если нет ID пользователя, не сохраняем
             if (!userData.id) return;
             
             try {
@@ -289,8 +442,10 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         telegram_id: userData.id,
+                        game_login: userData.game_login,
                         gold: userData.gold,
                         wood: userData.wood,
+                        level: userData.level,
                         buildings: buildings
                     })
                 });
@@ -299,43 +454,30 @@
             }
         }
         
-        // === ИГРОВЫЕ ФУНКЦИИ ===
-        
-        // Постройка здания
+        // Постройка
         async function build(buildingId) {
             const building = buildings.find(b => b.id === buildingId);
             
-            // Проверяем, хватает ли ресурсов
             if (userData.gold < building.costGold || userData.wood < building.costWood) {
                 showToast('❌ Не хватает ресурсов!');
                 return;
             }
             
-            // Списываем ресурсы
             userData.gold -= building.costGold;
             userData.wood -= building.costWood;
-            
-            // Увеличиваем счётчик
             building.count++;
             
-            // Обновляем интерфейс
+            // Проверяем повышение уровня
+            const totalBuildings = buildings.reduce((sum, b) => sum + b.count, 0);
+            userData.level = Math.floor(totalBuildings / 5) + 1;
+            
             updateUI();
-            
-            // Сохраняем прогресс
             await saveProgress();
-            
             showToast(`✅ Построено: ${building.name}`);
-            
-            // Отправляем событие в Telegram (для статистики)
-            tg.sendData(JSON.stringify({
-                action: 'build',
-                building: buildingId
-            }));
         }
         
         // Сбор ресурсов
         async function collectResources() {
-            // Считаем доход
             let goldIncome = 0;
             let woodIncome = 0;
             
@@ -344,42 +486,28 @@
                 woodIncome += b.woodProd * b.count;
             });
             
-            // Базовая добыча от уровня
             goldIncome += userData.level * 2;
             woodIncome += userData.level * 1;
             
-            // Добавляем ресурсы
             userData.gold += goldIncome;
             userData.wood += woodIncome;
             
-            // Обновляем интерфейс
             updateUI();
-            
-            // Сохраняем прогресс
             await saveProgress();
-            
             showToast(`📦 +${goldIncome} 🪙, +${woodIncome} 🪵`);
             
-            // Виброотклик в Telegram
             if (tg.HapticFeedback) {
                 tg.HapticFeedback.impactOccurred('medium');
             }
         }
         
-        // === ФУНКЦИИ ДЛЯ КЛАНОВ ===
-        
-        // Создание клана
+        // Кланы
         async function createClan() {
             const name = document.getElementById('clanName').value.trim();
             const tag = document.getElementById('clanTag').value.trim();
             
             if (!name || !tag) {
-                showToast('❌ Введите название и тег клана');
-                return;
-            }
-            
-            if (!userData.id) {
-                showToast('❌ Сначала войдите в игру');
+                showToast('❌ Введите название и тег');
                 return;
             }
             
@@ -401,16 +529,12 @@
                     document.getElementById('clanMenu').classList.add('hidden');
                     document.getElementById('clanName').value = '';
                     document.getElementById('clanTag').value = '';
-                } else {
-                    showToast('❌ Ошибка создания клана');
                 }
             } catch (error) {
-                console.error('Create clan error:', error);
-                showToast('❌ Ошибка сервера');
+                showToast('❌ Ошибка');
             }
         }
         
-        // Показать топ кланов
         async function showTopClans() {
             try {
                 const response = await fetch(`${API_URL}/api/clans/top`);
@@ -436,20 +560,16 @@
                 document.getElementById('topClans').innerHTML = html;
                 document.getElementById('topClans').classList.remove('hidden');
             } catch (error) {
-                console.error('Top clans error:', error);
-                showToast('❌ Ошибка загрузки');
+                showToast('❌ Ошибка');
             }
         }
         
-        // === ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ===
-        
+        // Обновление интерфейса
         function updateUI() {
-            // Обновляем ресурсы
             document.getElementById('gold').textContent = userData.gold;
             document.getElementById('wood').textContent = userData.wood;
             document.getElementById('level').textContent = userData.level;
             
-            // Генерируем список построек
             let buildingsHtml = '';
             buildings.forEach(b => {
                 const canBuild = userData.gold >= b.costGold && userData.wood >= b.costWood;
@@ -466,28 +586,20 @@
             document.getElementById('buildings').innerHTML = buildingsHtml;
         }
         
-        // === ОБРАБОТЧИКИ СОБЫТИЙ ===
-        
+        // === ЗАПУСК ===
         document.addEventListener('DOMContentLoaded', () => {
-            // Авторизация
             login();
             
-            // Кнопка сбора ресурсов
             document.getElementById('collectBtn').addEventListener('click', collectResources);
-            
-            // Кнопка кланов
             document.getElementById('clanBtn').addEventListener('click', () => {
                 document.getElementById('clanMenu').classList.toggle('hidden');
                 document.getElementById('topClans').classList.add('hidden');
             });
-            
-            // Кнопка создания клана
             document.getElementById('createClanBtn').addEventListener('click', createClan);
-            
-            // Кнопка топа кланов
             document.getElementById('topClansBtn').addEventListener('click', showTopClans);
+            document.getElementById('confirmLogin').addEventListener('click', saveGameLogin);
             
-            // Автосохранение каждую секунду
+            // Сохранение каждую секунду
             setInterval(saveProgress, 1000);
             
             // Сохраняем при закрытии
