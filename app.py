@@ -6,7 +6,7 @@ import json
 app = Flask(__name__)
 
 # Настройки Sheety - ВСТАВЬТЕ СВОИ ДАННЫЕ
-SHEETY_URL = "https://api.sheety.co/ваш_ключ/citybuilderdb"
+SHEETY_URL = "https://api.sheety.co/3c7a64d22736a2e2d72dfc25150c8cd8/citybuilderdb"
 
 @app.route('/')
 def index():
@@ -150,4 +150,5 @@ def create_clan():
         return jsonify({'success': False})
 
 if __name__ == '__main__':
+
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
