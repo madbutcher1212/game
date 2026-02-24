@@ -9,8 +9,10 @@ app = Flask(__name__)
 # ========== НАСТРОЙКИ SUPABASE ==========
 SUPABASE_URL = "https://xevwktdwyioyantuqntb.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhldndrdGR3eWlveWFudHVxbnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4ODI2NTAsImV4cCI6MjA4NzQ1ODY1MH0.jC8jqGBv_yrbYg_x4XQradxxbkDtsXsQ9EBT0Iabed4"
+
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 # ========================================
+
 @app.route('/')
 def index():
     print("➡️ Главная страница загружена")
@@ -23,6 +25,7 @@ def auth():
     
     data = request.json
     # В реальном проекте telegram_id берется из initData
+    # Пока используем тестовый ID
     telegram_id = "123456789"
     
     try:
@@ -35,7 +38,7 @@ def auth():
         if result.data and len(result.data) > 0:
             # Пользователь найден
             player = result.data[0]
-            print(f"✅ Игрок найден: {player.get('game_login')}")
+            print(f"✅ Игрок найден в Supabase: {player.get('game_login')}")
             
             # Загружаем постройки из JSON
             buildings = []
@@ -128,7 +131,7 @@ def save():
                 }) \
                 .eq('id', player_id) \
                 .execute()
-            print(f"✅ Данные обновлены для игрока {player_id}")
+            print(f"✅ Данные обновлены в Supabase для игрока {player_id}")
         else:
             # Создаем нового
             insert_result = supabase.table("players") \
@@ -141,7 +144,7 @@ def save():
                     'buildings': buildings_json
                 }) \
                 .execute()
-            print(f"✅ Новый игрок создан")
+            print(f"✅ Новый игрок создан в Supabase")
             
     except Exception as e:
         print(f"❌ Ошибка сохранения в Supabase: {e}")
