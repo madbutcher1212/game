@@ -20,7 +20,8 @@ def auth():
     print("➡️ Получен запрос /api/auth")
     
     data = request.json
-    telegram_id = 123456789  # В реальности брать из initData
+    # В реальном проекте здесь нужно расшифровывать initData из Telegram
+    telegram_id = 123456789  # Временное решение для теста
     
     try:
         # Проверяем Sheety
@@ -32,10 +33,18 @@ def auth():
             players = response.json().get('players', [])
             print(f"👥 Найдено игроков в базе: {len(players)}")
             
-            # Ищем игрока
+            # Ищем игрока по telegram_id
             for p in players:
                 if p.get('telegram_id') == telegram_id:
                     print(f"✅ Игрок найден в базе: {p.get('game_login')}")
+                    # Загружаем постройки из JSON
+                    saved_buildings = []
+                    if p.get('buildings'):
+                        try:
+                            saved_buildings = json.loads(p.get('buildings'))
+                        except:
+                            saved_buildings = []
+                    
                     return jsonify({
                         'success': True,
                         'user': {
@@ -44,10 +53,11 @@ def auth():
                             'gold': p.get('gold', 100),
                             'wood': p.get('wood', 50),
                             'level': p.get('level', 1)
-                        }
+                        },
+                        'buildings': saved_buildings
                     })
             
-            print(f"👤 Игрок не найден, будет создан при сохранении")
+            print(f"👤 Игрок с telegram_id {telegram_id} не найден")
     except Exception as e:
         print(f"❌ Ошибка при проверке Sheety: {e}")
     
@@ -60,7 +70,8 @@ def auth():
             'gold': 100,
             'wood': 50,
             'level': 1
-        }
+        },
+        'buildings': []
     })
 
 @app.route('/api/save', methods=['POST'])
@@ -82,6 +93,10 @@ def save():
     print(f"   level: {level}")
     print(f"   buildings: {buildings}")
     
+    if not telegram_id:
+        print("❌ Нет telegram_id, сохранение невозможно")
+        return jsonify({'success': False, 'error': 'No telegram_id'})
+    
     try:
         # Получаем список игроков из Sheety
         print(f"🔍 Запрашиваем список игроков из Sheety...")
@@ -89,13 +104,17 @@ def save():
         print(f"📊 Статус ответа: {response.status_code}")
         
         if response.status_code == 200:
-            players = response.json().get('players', [])
+            players_data = response.json()
+            players = players_data.get('players', [])
             print(f"👥 Получено игроков из Sheety: {len(players)}")
             
-            # Ищем игрока
+            # Преобразуем buildings в JSON строку
+            buildings_json = json.dumps(buildings, ensure_ascii=False)
+            
+            # Ищем игрока по telegram_id
             found = False
             for p in players:
-                if p.get('telegram_id') == telegram_id:
+                if str(p.get('telegram_id')) == str(telegram_id):
                     found = True
                     player_id = p['id']
                     print(f"✅ Игрок найден! ID в Sheety: {player_id}")
@@ -107,7 +126,7 @@ def save():
                             'gold': gold,
                             'wood': wood,
                             'level': level,
-                            'buildings': json.dumps(buildings)
+                            'buildings': buildings_json
                         }
                     }
                     print(f"📤 Отправляем данные в Sheety: {update_data}")
@@ -134,7 +153,7 @@ def save():
                         'gold': gold,
                         'wood': wood,
                         'level': level,
-                        'buildings': json.dumps(buildings)
+                        'buildings': buildings_json
                     }
                 }
                 print(f"📤 Отправляем данные для создания: {new_player}")
@@ -151,6 +170,10 @@ def save():
             print(f"❌ Не удалось получить список игроков. Статус: {response.status_code}")
             print(f"📋 Текст ошибки: {response.text}")
             
+    except requests.exceptions.ConnectionError:
+        print(f"❌ Ошибка подключения к Sheety - нет соединения")
+    except requests.exceptions.Timeout:
+        print(f"❌ Таймаут при подключении к Sheety")
     except Exception as e:
         print(f"❌ КРИТИЧЕСКАЯ ОШИБКА при работе с Sheety: {e}")
         import traceback
@@ -171,4 +194,5 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     print(f"🚀 Сервер запущен на порту {port}")
     app.run(host='0.0.0.0', port=port, debug=True)
+
 
