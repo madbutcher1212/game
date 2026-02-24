@@ -1,14 +1,16 @@
 from flask import Flask, request, jsonify, render_template
-import requests
+from supabase import create_client, Client
 import os
 import json
 from datetime import datetime
 
 app = Flask(__name__)
 
-# ========== ВАШ КЛЮЧ (правильный регистр) ==========
-SHEETY_URL = "https://api.sheety.co/3c7a64d22736a2e2d72dfc25150c8cd8/citybuilderdb"
-# ===================================================
+# ========== НАСТРОЙКИ SUPABASE ==========
+SUPABASE_URL = "https://xevwktdwyioyantuqntb.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhldndrdGR3eWlveWFudHVxbnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4ODI2NTAsImV4cCI6MjA4NzQ1ODY1MH0.jC8jqGBv_yrbYg_x4XQradxxbkDtsXsQ9EBT0Iabed4"
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+# ========================================
 
 @app.route('/')
 def index():
@@ -17,62 +19,70 @@ def index():
 
 @app.route('/api/auth', methods=['POST'])
 def auth():
+    """Авторизация пользователя"""
     print("➡️ Получен запрос /api/auth")
     
     data = request.json
-    # В реальном проекте здесь нужно расшифровывать initData из Telegram
-    telegram_id = 123456789  # Временное решение для теста
+    # В реальном проекте telegram_id берется из initData
+    telegram_id = "123456789"
     
     try:
-        # Проверяем Sheety
-        print(f"🔍 Проверяем Sheety: {SHEETY_URL}/players")
-        response = requests.get(f"{SHEETY_URL}/players")
-        print(f"📊 Sheety ответ при авторизации: статус {response.status_code}")
+        # Ищем пользователя в Supabase
+        result = supabase.table("players") \
+            .select("*") \
+            .eq("telegram_id", telegram_id) \
+            .execute()
         
-        if response.status_code == 200:
-            players = response.json().get('players', [])
-            print(f"👥 Найдено игроков в базе: {len(players)}")
+        if result.data and len(result.data) > 0:
+            # Пользователь найден
+            player = result.data[0]
+            print(f"✅ Игрок найден: {player.get('game_login')}")
             
-            # Ищем игрока по telegram_id
-            for p in players:
-                if p.get('telegram_id') == telegram_id:
-                    print(f"✅ Игрок найден в базе: {p.get('game_login')}")
-                    # Загружаем постройки из JSON
-                    saved_buildings = []
-                    if p.get('buildings'):
-                        try:
-                            saved_buildings = json.loads(p.get('buildings'))
-                        except:
-                            saved_buildings = []
-                    
-                    return jsonify({
-                        'success': True,
-                        'user': {
-                            'id': p.get('telegram_id'),
-                            'game_login': p.get('game_login', ''),
-                            'gold': p.get('gold', 100),
-                            'wood': p.get('wood', 50),
-                            'level': p.get('level', 1)
-                        },
-                        'buildings': saved_buildings
-                    })
+            # Загружаем постройки из JSON
+            buildings = []
+            if player.get('buildings'):
+                try:
+                    buildings = json.loads(player.get('buildings'))
+                except:
+                    buildings = []
             
-            print(f"👤 Игрок с telegram_id {telegram_id} не найден")
+            return jsonify({
+                'success': True,
+                'user': {
+                    'id': player.get('telegram_id'),
+                    'game_login': player.get('game_login', ''),
+                    'gold': player.get('gold', 100),
+                    'wood': player.get('wood', 50),
+                    'level': player.get('level', 1)
+                },
+                'buildings': buildings
+            })
+        else:
+            print(f"👤 Новый игрок с telegram_id {telegram_id}")
+            return jsonify({
+                'success': True,
+                'user': {
+                    'id': telegram_id,
+                    'game_login': '',
+                    'gold': 100,
+                    'wood': 50,
+                    'level': 1
+                },
+                'buildings': []
+            })
     except Exception as e:
-        print(f"❌ Ошибка при проверке Sheety: {e}")
-    
-    # Возвращаем нового игрока
-    return jsonify({
-        'success': True,
-        'user': {
-            'id': telegram_id,
-            'game_login': '',
-            'gold': 100,
-            'wood': 50,
-            'level': 1
-        },
-        'buildings': []
-    })
+        print(f"❌ Ошибка авторизации: {e}")
+        return jsonify({
+            'success': True,
+            'user': {
+                'id': telegram_id,
+                'game_login': '',
+                'gold': 100,
+                'wood': 50,
+                'level': 1
+            },
+            'buildings': []
+        })
 
 @app.route('/api/save', methods=['POST'])
 def save():
@@ -85,101 +95,58 @@ def save():
     level = data.get('level', 1)
     buildings = data.get('buildings', [])
     
-    print(f"\n📦 ПОЛУЧЕНЫ ДАННЫЕ ДЛЯ СОХРАНЕНИЯ:")
+    print(f"\n📦 СОХРАНЯЕМ В SUPABASE:")
     print(f"   telegram_id: {telegram_id}")
     print(f"   game_login: {game_login}")
     print(f"   gold: {gold}")
     print(f"   wood: {wood}")
     print(f"   level: {level}")
-    print(f"   buildings: {buildings}")
+    print(f"   buildings: {len(buildings)} построек")
     
     if not telegram_id:
-        print("❌ Нет telegram_id, сохранение невозможно")
         return jsonify({'success': False, 'error': 'No telegram_id'})
     
     try:
-        # Получаем список игроков из Sheety
-        print(f"🔍 Запрашиваем список игроков из Sheety...")
-        response = requests.get(f"{SHEETY_URL}/players")
-        print(f"📊 Статус ответа: {response.status_code}")
+        # Преобразуем buildings в JSON строку
+        buildings_json = json.dumps(buildings, ensure_ascii=False)
         
-        if response.status_code == 200:
-            players_data = response.json()
-            players = players_data.get('players', [])
-            print(f"👥 Получено игроков из Sheety: {len(players)}")
-            
-            # Преобразуем buildings в JSON строку
-            buildings_json = json.dumps(buildings, ensure_ascii=False)
-            
-            # Ищем игрока по telegram_id
-            found = False
-            for p in players:
-                if str(p.get('telegram_id')) == str(telegram_id):
-                    found = True
-                    player_id = p['id']
-                    print(f"✅ Игрок найден! ID в Sheety: {player_id}")
-                    
-                    # Подготавливаем данные для обновления
-                    update_data = {
-                        'player': {
-                            'game_login': game_login,
-                            'gold': gold,
-                            'wood': wood,
-                            'level': level,
-                            'buildings': buildings_json
-                        }
-                    }
-                    print(f"📤 Отправляем данные в Sheety: {update_data}")
-                    
-                    # Отправляем запрос на обновление
-                    update_response = requests.put(f"{SHEETY_URL}/players/{player_id}", json=update_data)
-                    print(f"📥 Ответ от Sheety при обновлении: статус {update_response.status_code}")
-                    
-                    if update_response.status_code == 200:
-                        print(f"✅ Данные успешно обновлены в Sheety!")
-                        print(f"📋 Ответ: {update_response.json()}")
-                    else:
-                        print(f"❌ Ошибка при обновлении: {update_response.text}")
-                    break
-            
-            if not found:
-                print(f"👤 Игрок не найден, создаем нового...")
-                
-                # Создаем нового игрока
-                new_player = {
-                    'player': {
-                        'telegram_id': telegram_id,
-                        'game_login': game_login,
-                        'gold': gold,
-                        'wood': wood,
-                        'level': level,
-                        'buildings': buildings_json
-                    }
-                }
-                print(f"📤 Отправляем данные для создания: {new_player}")
-                
-                create_response = requests.post(f"{SHEETY_URL}/players", json=new_player)
-                print(f"📥 Ответ от Sheety при создании: статус {create_response.status_code}")
-                
-                if create_response.status_code == 200:
-                    print(f"✅ Новый игрок успешно создан в Sheety!")
-                    print(f"📋 Ответ: {create_response.json()}")
-                else:
-                    print(f"❌ Ошибка при создании: {create_response.text}")
+        # Проверяем, есть ли уже такой игрок
+        result = supabase.table("players") \
+            .select("*") \
+            .eq("telegram_id", telegram_id) \
+            .execute()
+        
+        if result.data and len(result.data) > 0:
+            # Обновляем существующего
+            player_id = result.data[0]['id']
+            update_result = supabase.table("players") \
+                .update({
+                    'game_login': game_login,
+                    'gold': gold,
+                    'wood': wood,
+                    'level': level,
+                    'buildings': buildings_json
+                }) \
+                .eq('id', player_id) \
+                .execute()
+            print(f"✅ Данные обновлены для игрока {player_id}")
         else:
-            print(f"❌ Не удалось получить список игроков. Статус: {response.status_code}")
-            print(f"📋 Текст ошибки: {response.text}")
+            # Создаем нового
+            insert_result = supabase.table("players") \
+                .insert({
+                    'telegram_id': telegram_id,
+                    'game_login': game_login,
+                    'gold': gold,
+                    'wood': wood,
+                    'level': level,
+                    'buildings': buildings_json
+                }) \
+                .execute()
+            print(f"✅ Новый игрок создан")
             
-    except requests.exceptions.ConnectionError:
-        print(f"❌ Ошибка подключения к Sheety - нет соединения")
-    except requests.exceptions.Timeout:
-        print(f"❌ Таймаут при подключении к Sheety")
     except Exception as e:
-        print(f"❌ КРИТИЧЕСКАЯ ОШИБКА при работе с Sheety: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"❌ Ошибка сохранения в Supabase: {e}")
     
-    print("✅ Запрос на сохранение обработан\n")
     return jsonify({'success': True})
 
 @app.route('/api/clan/create', methods=['POST'])
@@ -188,11 +155,17 @@ def create_clan():
 
 @app.route('/api/clans/top', methods=['GET'])
 def top_clans():
-    return jsonify({'clans': []})
+    try:
+        result = supabase.table("players") \
+            .select("*") \
+            .order('gold', desc=True) \
+            .limit(10) \
+            .execute()
+        return jsonify({'players': result.data})
+    except:
+        return jsonify({'players': []})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     print(f"🚀 Сервер запущен на порту {port}")
     app.run(host='0.0.0.0', port=port, debug=True)
-
-
