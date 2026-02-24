@@ -29,7 +29,7 @@ TOWN_HALL_INCOME = {
     5: 100
 }
 
-# Стоимость улучшения ратуши (уровня игрока)
+# Стоимость улучшения уровня игрока (ратуши)
 TOWN_HALL_UPGRADE_COST = {
     2: {"gold": 50, "wood": 20, "stone": 0},
     3: {"gold": 300, "wood": 100, "stone": 30},
@@ -426,6 +426,8 @@ def game_action():
                 .eq('id', player_id) \
                 .execute()
             
+            print(f"✅ Построено {building_id}")
+            
             response_data['state'] = {
                 'gold': gold,
                 'wood': wood,
@@ -456,7 +458,7 @@ def game_action():
             if current_level >= BUILDINGS_CONFIG[building_id]["max_level"]:
                 return jsonify({'success': False, 'error': 'Max level reached'})
             
-            # Проверяем уровень игрока (ратуши)
+            # Проверяем уровень игрока (ратуши) для следующего уровня здания
             if level < current_level + 1:
                 return jsonify({'success': False, 'error': f'Требуется уровень {current_level + 1}'})
             
@@ -484,6 +486,8 @@ def game_action():
                 }) \
                 .eq('id', player_id) \
                 .execute()
+            
+            print(f"✅ Улучшено {building_id} до уровня {current_level + 1}")
             
             response_data['state'] = {
                 'gold': gold,
@@ -521,6 +525,8 @@ def game_action():
                 .eq('id', player_id) \
                 .execute()
             
+            print(f"✅ Уровень повышен до {level}")
+            
             response_data['state'] = {
                 'gold': gold,
                 'wood': wood,
@@ -543,6 +549,8 @@ def game_action():
                 .update({'game_login': new_login}) \
                 .eq('id', player_id) \
                 .execute()
+            
+            print(f"✅ Имя изменено на: {new_login}")
             
             response_data['state'] = {
                 'game_login': new_login,
