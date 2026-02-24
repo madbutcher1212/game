@@ -30,7 +30,7 @@
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
         
-        /* Шапка с профилем и ресурсами */
+        /* Шапка с профилем */
         .header {
             display: flex;
             align-items: center;
@@ -99,22 +99,9 @@
             color: #333;
         }
         
-        /* Основные ресурсы (оставим для красоты) */
+        /* Основные ресурсы (сделаем их меньше или скроем) */
         .resources {
-            display: flex;
-            justify-content: space-around;
-            background: #f0f0f0;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 20px;
-            font-size: 18px;
-            font-weight: bold;
-        }
-        
-        .resource-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
+            display: none;  /* Скрываем старые ресурсы */
         }
         
         .buildings {
@@ -159,6 +146,11 @@
             font-size: 14px;
             color: #666;
             margin-bottom: 5px;
+        }
+        
+        .building-cost span {
+            display: inline-block;
+            margin-right: 5px;
         }
         
         .building-count {
@@ -271,6 +263,16 @@
             font-size: 36px;
             font-weight: bold;
         }
+        
+        .level-badge {
+            background: #ffd700;
+            color: #333;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
@@ -311,19 +313,14 @@
                     <span>⛰️</span>
                     <span id="stoneMini">0</span>
                 </div>
+                <div class="resource-mini-item">
+                    <span>📊</span>
+                    <span id="levelMini">1</span>
+                </div>
             </div>
         </div>
         
-        <!-- Основные ресурсы (оставим для красоты) -->
-        <div class="resources">
-            <div class="resource-item">🪙 <span id="gold">100</span></div>
-            <div class="resource-item">🪵 <span id="wood">50</span></div>
-            <div class="resource-item">🌾 <span id="food">50</span></div>
-            <div class="resource-item">⛰️ <span id="stone">0</span></div>
-            <div class="resource-item">📊 <span id="level">1</span></div>
-        </div>
-        
-        <!-- Постройки будут вставляться сюда -->
+        <!-- Постройки -->
         <div class="buildings" id="buildings"></div>
         
         <!-- Кнопки -->
@@ -362,8 +359,8 @@
             game_login: '',
             gold: 100,
             wood: 50,
-            food: 50,      // НОВОЕ
-            stone: 0,       // НОВОЕ
+            food: 50,
+            stone: 0,
             level: 1
         };
         
@@ -405,54 +402,53 @@
         
         // ОБНОВЛЕНИЕ ИНТЕРФЕЙСА
         function updateUI() {
-            // Основные ресурсы
-            document.getElementById('gold').textContent = userData.gold;
-            document.getElementById('wood').textContent = userData.wood;
-            document.getElementById('food').textContent = userData.food;      // НОВОЕ
-            document.getElementById('stone').textContent = userData.stone;    // НОВОЕ
-            document.getElementById('level').textContent = userData.level;
-            
-            // Мини-ресурсы в шапке
+            // Обновляем мини-ресурсы в шапке
             document.getElementById('goldMini').textContent = userData.gold;
             document.getElementById('woodMini').textContent = userData.wood;
-            document.getElementById('foodMini').textContent = userData.food;      // НОВОЕ
-            document.getElementById('stoneMini').textContent = userData.stone;    // НОВОЕ
+            document.getElementById('foodMini').textContent = userData.food;
+            document.getElementById('stoneMini').textContent = userData.stone;
+            document.getElementById('levelMini').textContent = userData.level;
             
             // Генерируем список построек
             let buildingsHtml = '';
             
             // Проходим по всем зданиям из конфига
-            Object.keys(buildingsConfig).forEach(buildingId => {
-                const config = buildingsConfig[buildingId];
-                
-                // Ищем, сколько уже построено
-                const building = buildings.find(b => b.id === buildingId);
-                const count = building ? building.count : 0;
-                
-                // Проверяем, хватает ли ресурсов
-                const canBuild = 
-                    userData.gold >= config.cost_gold &&
-                    userData.wood >= config.cost_wood &&
-                    userData.food >= (config.cost_food || 0) &&      // НОВОЕ
-                    userData.stone >= (config.cost_stone || 0);      // НОВОЕ
-                
-                // Формируем строку стоимости
-                let costText = '';
-                if (config.cost_gold > 0) costText += `🪙${config.cost_gold} `;
-                if (config.cost_wood > 0) costText += `🪵${config.cost_wood} `;
-                if (config.cost_food > 0) costText += `🌾${config.cost_food} `;     // НОВОЕ
-                if (config.cost_stone > 0) costText += `⛰️${config.cost_stone} `;   // НОВОЕ
-                
-                buildingsHtml += `
-                    <div class="building ${canBuild ? 'available' : 'unavailable'}" 
-                         onclick="build('${buildingId}')">
-                        <div class="building-icon">${config.icon}</div>
-                        <div class="building-name">${config.name}</div>
-                        <div class="building-cost">${costText}</div>
-                        <div class="building-count">Построено: ${count}</div>
-                    </div>
-                `;
-            });
+            if (buildingsConfig && Object.keys(buildingsConfig).length > 0) {
+                Object.keys(buildingsConfig).forEach(buildingId => {
+                    const config = buildingsConfig[buildingId];
+                    
+                    // Ищем, сколько уже построено
+                    const building = buildings.find(b => b.id === buildingId);
+                    const count = building ? building.count : 0;
+                    
+                    // Проверяем, хватает ли ресурсов
+                    const canBuild = 
+                        userData.gold >= (config.cost_gold || 0) &&
+                        userData.wood >= (config.cost_wood || 0) &&
+                        userData.food >= (config.cost_food || 0) &&
+                        userData.stone >= (config.cost_stone || 0);
+                    
+                    // Формируем строку стоимости
+                    let costText = '';
+                    if (config.cost_gold > 0) costText += `🪙${config.cost_gold} `;
+                    if (config.cost_wood > 0) costText += `🪵${config.cost_wood} `;
+                    if (config.cost_food > 0) costText += `🌾${config.cost_food} `;
+                    if (config.cost_stone > 0) costText += `⛰️${config.cost_stone} `;
+                    
+                    buildingsHtml += `
+                        <div class="building ${canBuild ? 'available' : 'unavailable'}" 
+                             onclick="build('${buildingId}')">
+                            <div class="building-icon">${config.icon || '🏗️'}</div>
+                            <div class="building-name">${config.name || buildingId}</div>
+                            <div class="building-cost">${costText}</div>
+                            <div class="building-count">Построено: ${count}</div>
+                        </div>
+                    `;
+                });
+            } else {
+                // Пока конфиг не загрузился, показываем заглушку
+                buildingsHtml = '<div style="grid-column: span 2; text-align: center; padding: 20px;">Загрузка...</div>';
+            }
             
             document.getElementById('buildings').innerHTML = buildingsHtml;
         }
@@ -477,8 +473,8 @@
                     if (result.state) {
                         if (result.state.gold !== undefined) userData.gold = result.state.gold;
                         if (result.state.wood !== undefined) userData.wood = result.state.wood;
-                        if (result.state.food !== undefined) userData.food = result.state.food;           // НОВОЕ
-                        if (result.state.stone !== undefined) userData.stone = result.state.stone;       // НОВОЕ
+                        if (result.state.food !== undefined) userData.food = result.state.food;
+                        if (result.state.stone !== undefined) userData.stone = result.state.stone;
                         if (result.state.level !== undefined) userData.level = result.state.level;
                         if (result.state.game_login !== undefined) {
                             userData.game_login = result.state.game_login;
@@ -523,8 +519,8 @@
                     userData.game_login = data.user.game_login || '';
                     userData.gold = data.user.gold;
                     userData.wood = data.user.wood;
-                    userData.food = data.user.food || 50;      // НОВОЕ
-                    userData.stone = data.user.stone || 0;      // НОВОЕ
+                    userData.food = data.user.food || 50;
+                    userData.stone = data.user.stone || 0;
                     userData.level = data.user.level;
                     
                     // Загружаем постройки
@@ -539,11 +535,18 @@
                     // Показываем окно выбора имени, если нужно
                     if (!userData.game_login) {
                         document.getElementById('loginOverlay').style.display = 'flex';
+                    } else {
+                        document.getElementById('loginOverlay').style.display = 'none';
                     }
                 }
             } catch (error) {
                 console.error('Auth error:', error);
                 showToast('⚠️ Ошибка загрузки');
+                
+                // Для теста
+                userData.game_login = 'Тест';
+                updateUserInfo();
+                updateUI();
             }
         }
         
@@ -575,9 +578,38 @@
             }
         }
         
-        // КЛАНЫ (заглушки)
+        // КЛАНЫ
         async function createClan() {
-            showToast('🚧 В разработке');
+            const name = document.getElementById('clanName').value.trim();
+            const tag = document.getElementById('clanTag').value.trim();
+            
+            if (!name || !tag) {
+                showToast('❌ Введите название и тег');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/api/clan/create`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: name,
+                        tag: tag,
+                        leader_id: userData.id
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('✅ Клан создан!');
+                    document.getElementById('clanMenu').classList.add('hidden');
+                    document.getElementById('clanName').value = '';
+                    document.getElementById('clanTag').value = '';
+                }
+            } catch (error) {
+                showToast('❌ Ошибка');
+            }
         }
         
         async function showTopClans() {
@@ -592,4 +624,36 @@
                 } else {
                     data.players.forEach((player, index) => {
                         html += `
-                            <div style="padding:10px; margin:5px;
+                            <div style="padding:10px; margin:5px; background:white; border-radius:8px;">
+                                <b>${index+1}. ${player.game_login || 'Без имени'}</b><br>
+                                Золото: ${player.gold}
+                            </div>
+                        `;
+                    });
+                }
+                
+                html += '<button class="button secondary" onclick="document.getElementById(\'topClans\').classList.add(\'hidden\')">Закрыть</button>';
+                
+                document.getElementById('topClans').innerHTML = html;
+                document.getElementById('topClans').classList.remove('hidden');
+            } catch (error) {
+                showToast('❌ Ошибка');
+            }
+        }
+        
+        // === ЗАПУСК ===
+        document.addEventListener('DOMContentLoaded', () => {
+            login();
+            
+            document.getElementById('collectBtn').addEventListener('click', collectResources);
+            document.getElementById('clanBtn').addEventListener('click', () => {
+                document.getElementById('clanMenu').classList.toggle('hidden');
+                document.getElementById('topClans').classList.add('hidden');
+            });
+            document.getElementById('createClanBtn').addEventListener('click', createClan);
+            document.getElementById('topClansBtn').addEventListener('click', showTopClans);
+            document.getElementById('confirmLogin').addEventListener('click', saveGameLogin);
+        });
+    </script>
+</body>
+</html>
