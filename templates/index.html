@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Rodstone War</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -14,9 +14,9 @@
         }
         
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e1e2f 0%, #2a2a40 100%);
             min-height: 100vh;
-            padding: 16px;
+            padding: 12px;
             display: flex;
             justify-content: center;
         }
@@ -25,97 +25,122 @@
             max-width: 400px;
             width: 100%;
             background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 20px;
+            border-radius: 24px;
+            padding: 16px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            height: fit-content;
         }
         
-        /* Шапка с профилем */
-        .header {
+        /* Верхний бар (всегда виден) */
+        .top-bar {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #f0f0f0;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e0e0e0;
         }
         
         .avatar {
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             background: linear-gradient(135deg, #667eea, #764ba2);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 24px;
+            font-size: 18px;
             font-weight: bold;
             text-transform: uppercase;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            flex-shrink: 0;
         }
         
         .user-info {
             flex: 1;
+            min-width: 0; /* Для обрезки текста */
+        }
+        
+        .name-level {
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
         
         .user-name {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 120px; /* Ограничиваем ширину ника */
+        }
+        
+        .level-badge {
+            background: #ffd700;
+            color: #333;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 13px;
+            white-space: nowrap;
         }
         
         .user-login {
-            font-size: 14px;
+            font-size: 12px;
             color: #666;
             margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 140px;
         }
         
-        /* Ресурсы в правом верхнем углу */
-        .resources-mini {
+        /* Ресурсы в баре */
+        .resources-bar {
             display: flex;
-            flex-direction: column;
-            gap: 5px;
-            background: #f0f0f0;
-            padding: 8px 12px;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: bold;
-            min-width: 100px;
-        }
-        
-        .resource-mini-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             gap: 8px;
+            background: #f0f0f0;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            flex-shrink: 0;
         }
         
-        .resource-mini-item span:first-child {
-            color: #666;
+        .resource-item {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            white-space: nowrap;
         }
         
-        .resource-mini-item span:last-child {
+        .resource-item span:last-child {
             color: #333;
         }
         
-        /* Основные ресурсы (сделаем их меньше или скроем) */
-        .resources {
-            display: none;  /* Скрываем старые ресурсы */
+        /* Контент вкладок */
+        .tab-content {
+            min-height: 300px;
+            margin-bottom: 12px;
         }
         
+        /* Город (постройки) */
         .buildings {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 8px;
         }
         
         .building {
             background: white;
             border: 2px solid #ddd;
             border-radius: 12px;
-            padding: 15px;
+            padding: 12px;
             text-align: center;
             cursor: pointer;
             transition: all 0.2s;
@@ -124,7 +149,7 @@
         .building.available {
             border-color: #4CAF50;
             background: #e8f5e8;
-            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
         }
         
         .building.unavailable {
@@ -133,62 +158,105 @@
         }
         
         .building-icon {
-            font-size: 40px;
-            margin-bottom: 5px;
+            font-size: 32px;
+            margin-bottom: 4px;
         }
         
         .building-name {
             font-weight: bold;
-            margin-bottom: 5px;
+            font-size: 14px;
+            margin-bottom: 4px;
         }
         
         .building-cost {
-            font-size: 14px;
+            font-size: 12px;
             color: #666;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
         
         .building-cost span {
             display: inline-block;
-            margin-right: 5px;
+            margin-right: 4px;
         }
         
         .building-count {
             color: #4CAF50;
             font-weight: bold;
+            font-size: 13px;
         }
         
-        .button {
+        /* Кнопка сбора */
+        .collect-btn {
             background: #4CAF50;
             color: white;
             border: none;
             border-radius: 25px;
-            padding: 15px;
-            font-size: 16px;
+            padding: 12px;
+            font-size: 15px;
             font-weight: bold;
             width: 100%;
-            margin-top: 10px;
+            margin-top: 8px;
             cursor: pointer;
             transition: background 0.2s;
         }
         
-        .button:hover {
+        .collect-btn:hover {
             background: #45a049;
         }
         
-        .button.secondary {
-            background: #2196F3;
+        /* Нижние вкладки */
+        .tabs {
+            display: flex;
+            justify-content: space-around;
+            background: #f8f8f8;
+            border-radius: 30px;
+            padding: 4px;
+            margin-top: 8px;
         }
         
-        .button.secondary:hover {
-            background: #1e87db;
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 8px 4px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
         }
         
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .tab-icon {
+            font-size: 18px;
+            display: block;
+            margin-bottom: 2px;
+        }
+        
+        .tab-label {
+            font-size: 11px;
+        }
+        
+        /* Стили для других вкладок (пока пустые) */
+        .empty-tab {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+            font-size: 14px;
+            background: #f9f9f9;
+            border-radius: 12px;
+        }
+        
+        /* Кланы */
         .clan-section {
-            margin-top: 20px;
-            padding: 15px;
             background: #f8f8f8;
             border-radius: 12px;
+            padding: 15px;
         }
         
         .hidden {
@@ -211,13 +279,14 @@
             transform: translateX(-50%);
             background: rgba(0,0,0,0.8);
             color: white;
-            padding: 12px 24px;
+            padding: 10px 20px;
             border-radius: 25px;
             font-size: 14px;
             display: none;
             z-index: 1000;
         }
         
+        /* Окно выбора логина */
         .login-overlay {
             position: fixed;
             top: 0;
@@ -264,14 +333,10 @@
             font-weight: bold;
         }
         
-        .level-badge {
-            background: #ffd700;
-            color: #333;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 14px;
-            margin-left: 10px;
+        .login-note {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
         }
     </style>
 </head>
@@ -281,63 +346,123 @@
         <div class="login-box">
             <div class="avatar-preview" id="avatarPreview">👤</div>
             <h3>Добро пожаловать!</h3>
-            <p>Придумайте имя в игре:</p>
-            <input type="text" id="newLogin" placeholder="Ваше игровое имя" maxlength="20">
-            <button class="button" id="confirmLogin">Начать игру</button>
+            <p>Придумайте имя в игре (до 12 символов):</p>
+            <input type="text" id="newLogin" placeholder="Ваше игровое имя" maxlength="12">
+            <div class="login-note">Имя можно будет изменить позже в настройках</div>
+            <button class="collect-btn" id="confirmLogin" style="margin-top: 15px;">Начать игру</button>
         </div>
     </div>
 
     <div class="game">
-        <!-- Шапка: слева аватар, справа ресурсы -->
-        <div class="header">
+        <!-- Верхний бар (всегда виден) -->
+        <div class="top-bar">
             <div class="avatar" id="avatar">👤</div>
             <div class="user-info">
-                <div class="user-name" id="userName">Загрузка...</div>
+                <div class="name-level">
+                    <div class="user-name" id="userName">Загрузка...</div>
+                    <div class="level-badge" id="levelBadge">1</div>
+                </div>
                 <div class="user-login" id="userLogin">@username</div>
             </div>
-            <!-- Ресурсы справа -->
-            <div class="resources-mini">
-                <div class="resource-mini-item">
+            <div class="resources-bar">
+                <div class="resource-item">
                     <span>🪙</span>
-                    <span id="goldMini">100</span>
+                    <span id="goldBar">100</span>
                 </div>
-                <div class="resource-mini-item">
+                <div class="resource-item">
                     <span>🪵</span>
-                    <span id="woodMini">50</span>
+                    <span id="woodBar">50</span>
                 </div>
-                <div class="resource-mini-item">
+                <div class="resource-item">
                     <span>🌾</span>
-                    <span id="foodMini">50</span>
+                    <span id="foodBar">50</span>
                 </div>
-                <div class="resource-mini-item">
+                <div class="resource-item">
                     <span>⛰️</span>
-                    <span id="stoneMini">0</span>
-                </div>
-                <div class="resource-mini-item">
-                    <span>📊</span>
-                    <span id="levelMini">1</span>
+                    <span id="stoneBar">0</span>
                 </div>
             </div>
         </div>
         
-        <!-- Постройки -->
-        <div class="buildings" id="buildings"></div>
-        
-        <!-- Кнопки -->
-        <button class="button" id="collectBtn">📦 Собрать ресурсы</button>
-        <button class="button secondary" id="clanBtn">👥 Кланы</button>
-        
-        <!-- Меню клана -->
-        <div id="clanMenu" class="clan-section hidden">
-            <h3>👥 Управление кланом</h3>
-            <input type="text" id="clanName" placeholder="Название клана">
-            <input type="text" id="clanTag" placeholder="Тег (до 5 букв)">
-            <button class="button" id="createClanBtn">✨ Создать клан</button>
-            <button class="button secondary" id="topClansBtn">🏆 Топ кланов</button>
+        <!-- Контент вкладок -->
+        <div class="tab-content">
+            <!-- Вкладка Город (видна по умолчанию) -->
+            <div id="tabCity" class="tab-pane active">
+                <div class="buildings" id="buildings"></div>
+                <button class="collect-btn" id="collectBtn">📦 Собрать ресурсы</button>
+            </div>
+            
+            <!-- Вкладка Армия (пустая) -->
+            <div id="tabArmy" class="tab-pane hidden">
+                <div class="empty-tab">
+                    ⚔️ Армия в разработке<br>
+                    <span style="font-size: 12px;">Скоро здесь можно будет нанимать войска</span>
+                </div>
+            </div>
+            
+            <!-- Вкладка Походы (пустая) -->
+            <div id="tabCampaign" class="tab-pane hidden">
+                <div class="empty-tab">
+                    🗺️ Походы в разработке<br>
+                    <span style="font-size: 12px;">Отправляйтесь в приключения за ресурсами</span>
+                </div>
+            </div>
+            
+            <!-- Вкладка Кланы -->
+            <div id="tabClans" class="tab-pane hidden">
+                <div class="clan-section">
+                    <h3 style="margin-bottom: 15px;">👥 Управление кланом</h3>
+                    <input type="text" id="clanName" placeholder="Название клана" maxlength="20">
+                    <input type="text" id="clanTag" placeholder="Тег (до 5 букв)" maxlength="5">
+                    <button class="collect-btn" id="createClanBtn" style="margin-top: 5px;">✨ Создать клан</button>
+                    <button class="collect-btn" id="topClansBtn" style="margin-top: 5px; background: #9C27B0;">🏆 Топ кланов</button>
+                    
+                    <!-- Список топ кланов -->
+                    <div id="topClans" style="margin-top: 15px;"></div>
+                </div>
+            </div>
+            
+            <!-- Вкладка Настройки -->
+            <div id="tabSettings" class="tab-pane hidden">
+                <div class="clan-section">
+                    <h3 style="margin-bottom: 15px;">⚙️ Настройки</h3>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">Изменить имя</label>
+                        <input type="text" id="changeNameInput" placeholder="Новое имя" maxlength="12">
+                        <button class="collect-btn" id="changeNameBtn" style="margin-top: 5px;">Сохранить</button>
+                    </div>
+                    
+                    <div style="color: #666; font-size: 13px; text-align: center;">
+                        ID: <span id="userTelegramId"></span>
+                    </div>
+                </div>
+            </div>
         </div>
         
-        <!-- Список топ кланов -->
-        <div id="topClans" class="clan-section hidden"></div>
+        <!-- Нижние вкладки -->
+        <div class="tabs">
+            <div class="tab active" data-tab="city">
+                <span class="tab-icon">🏠</span>
+                <span class="tab-label">Город</span>
+            </div>
+            <div class="tab" data-tab="army">
+                <span class="tab-icon">⚔️</span>
+                <span class="tab-label">Армия</span>
+            </div>
+            <div class="tab" data-tab="campaign">
+                <span class="tab-icon">🗺️</span>
+                <span class="tab-label">Походы</span>
+            </div>
+            <div class="tab" data-tab="clans">
+                <span class="tab-icon">👥</span>
+                <span class="tab-label">Кланы</span>
+            </div>
+            <div class="tab" data-tab="settings">
+                <span class="tab-icon">⚙️</span>
+                <span class="tab-label">Настройки</span>
+            </div>
+        </div>
     </div>
     
     <!-- Всплывающие уведомления -->
@@ -364,11 +489,14 @@
             level: 1
         };
         
-        // Постройки (будут загружены с сервера)
+        // Постройки
         let buildings = [];
         
-        // Конфиг зданий (придёт с сервера)
+        // Конфиг зданий
         let buildingsConfig = {};
+        
+        // Текущая вкладка
+        let currentTab = 'city';
         
         // === ФУНКЦИИ ===
         
@@ -395,62 +523,85 @@
         }
         
         function updateUserInfo() {
-            document.getElementById('userName').textContent = userData.game_login || 'Игрок';
+            // Обрезаем имя до 12 символов, если вдруг пришло больше
+            let displayName = userData.game_login || 'Игрок';
+            if (displayName.length > 12) {
+                displayName = displayName.substring(0, 12);
+            }
+            
+            document.getElementById('userName').textContent = displayName;
             document.getElementById('userLogin').textContent = '@' + (userData.username || 'username');
+            document.getElementById('levelBadge').textContent = userData.level;
+            document.getElementById('userTelegramId').textContent = userData.id || '—';
             updateAvatar();
+        }
+        
+        // Переключение вкладок
+        function switchTab(tabId) {
+            currentTab = tabId;
+            
+            // Обновляем классы у вкладок
+            document.querySelectorAll('.tab').forEach(tab => {
+                if (tab.dataset.tab === tabId) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            
+            // Показываем нужный контент
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                pane.classList.add('hidden');
+            });
+            document.getElementById(`tab${tabId.charAt(0).toUpperCase() + tabId.slice(1)}`).classList.remove('hidden');
         }
         
         // ОБНОВЛЕНИЕ ИНТЕРФЕЙСА
         function updateUI() {
-            // Обновляем мини-ресурсы в шапке
-            document.getElementById('goldMini').textContent = userData.gold;
-            document.getElementById('woodMini').textContent = userData.wood;
-            document.getElementById('foodMini').textContent = userData.food;
-            document.getElementById('stoneMini').textContent = userData.stone;
-            document.getElementById('levelMini').textContent = userData.level;
+            // Обновляем ресурсы в баре
+            document.getElementById('goldBar').textContent = userData.gold;
+            document.getElementById('woodBar').textContent = userData.wood;
+            document.getElementById('foodBar').textContent = userData.food;
+            document.getElementById('stoneBar').textContent = userData.stone;
             
-            // Генерируем список построек
-            let buildingsHtml = '';
-            
-            // Проходим по всем зданиям из конфига
-            if (buildingsConfig && Object.keys(buildingsConfig).length > 0) {
-                Object.keys(buildingsConfig).forEach(buildingId => {
-                    const config = buildingsConfig[buildingId];
-                    
-                    // Ищем, сколько уже построено
-                    const building = buildings.find(b => b.id === buildingId);
-                    const count = building ? building.count : 0;
-                    
-                    // Проверяем, хватает ли ресурсов
-                    const canBuild = 
-                        userData.gold >= (config.cost_gold || 0) &&
-                        userData.wood >= (config.cost_wood || 0) &&
-                        userData.food >= (config.cost_food || 0) &&
-                        userData.stone >= (config.cost_stone || 0);
-                    
-                    // Формируем строку стоимости
-                    let costText = '';
-                    if (config.cost_gold > 0) costText += `🪙${config.cost_gold} `;
-                    if (config.cost_wood > 0) costText += `🪵${config.cost_wood} `;
-                    if (config.cost_food > 0) costText += `🌾${config.cost_food} `;
-                    if (config.cost_stone > 0) costText += `⛰️${config.cost_stone} `;
-                    
-                    buildingsHtml += `
-                        <div class="building ${canBuild ? 'available' : 'unavailable'}" 
-                             onclick="build('${buildingId}')">
-                            <div class="building-icon">${config.icon || '🏗️'}</div>
-                            <div class="building-name">${config.name || buildingId}</div>
-                            <div class="building-cost">${costText}</div>
-                            <div class="building-count">Построено: ${count}</div>
-                        </div>
-                    `;
-                });
-            } else {
-                // Пока конфиг не загрузился, показываем заглушку
-                buildingsHtml = '<div style="grid-column: span 2; text-align: center; padding: 20px;">Загрузка...</div>';
+            // Обновляем только если открыта вкладка города
+            if (currentTab === 'city') {
+                let buildingsHtml = '';
+                
+                if (buildingsConfig && Object.keys(buildingsConfig).length > 0) {
+                    Object.keys(buildingsConfig).forEach(buildingId => {
+                        const config = buildingsConfig[buildingId];
+                        const building = buildings.find(b => b.id === buildingId);
+                        const count = building ? building.count : 0;
+                        
+                        const canBuild = 
+                            userData.gold >= (config.cost_gold || 0) &&
+                            userData.wood >= (config.cost_wood || 0) &&
+                            userData.food >= (config.cost_food || 0) &&
+                            userData.stone >= (config.cost_stone || 0);
+                        
+                        let costText = '';
+                        if (config.cost_gold > 0) costText += `🪙${config.cost_gold} `;
+                        if (config.cost_wood > 0) costText += `🪵${config.cost_wood} `;
+                        if (config.cost_food > 0) costText += `🌾${config.cost_food} `;
+                        if (config.cost_stone > 0) costText += `⛰️${config.cost_stone} `;
+                        
+                        buildingsHtml += `
+                            <div class="building ${canBuild ? 'available' : 'unavailable'}" 
+                                 onclick="build('${buildingId}')">
+                                <div class="building-icon">${config.icon || '🏗️'}</div>
+                                <div class="building-name">${config.name || buildingId}</div>
+                                <div class="building-cost">${costText}</div>
+                                <div class="building-count">${count}</div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    buildingsHtml = '<div style="grid-column: span 2; text-align: center; padding: 20px;">Загрузка...</div>';
+                }
+                
+                document.getElementById('buildings').innerHTML = buildingsHtml;
             }
-            
-            document.getElementById('buildings').innerHTML = buildingsHtml;
         }
         
         // ОТПРАВКА ДЕЙСТВИЯ НА СЕРВЕР
@@ -469,13 +620,15 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    // Обновляем все данные из ответа сервера
                     if (result.state) {
                         if (result.state.gold !== undefined) userData.gold = result.state.gold;
                         if (result.state.wood !== undefined) userData.wood = result.state.wood;
                         if (result.state.food !== undefined) userData.food = result.state.food;
                         if (result.state.stone !== undefined) userData.stone = result.state.stone;
-                        if (result.state.level !== undefined) userData.level = result.state.level;
+                        if (result.state.level !== undefined) {
+                            userData.level = result.state.level;
+                            document.getElementById('levelBadge').textContent = userData.level;
+                        }
                         if (result.state.game_login !== undefined) {
                             userData.game_login = result.state.game_login;
                             updateUserInfo();
@@ -513,7 +666,6 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    // Загружаем данные пользователя
                     userData.id = data.user.id;
                     userData.username = data.user.username;
                     userData.game_login = data.user.game_login || '';
@@ -523,30 +675,19 @@
                     userData.stone = data.user.stone || 0;
                     userData.level = data.user.level;
                     
-                    // Загружаем постройки
                     buildings = data.buildings || [];
-                    
-                    // Загружаем конфиг зданий
                     buildingsConfig = data.config || {};
                     
                     updateUserInfo();
                     updateUI();
                     
-                    // Показываем окно выбора имени, если нужно
                     if (!userData.game_login) {
                         document.getElementById('loginOverlay').style.display = 'flex';
-                    } else {
-                        document.getElementById('loginOverlay').style.display = 'none';
                     }
                 }
             } catch (error) {
                 console.error('Auth error:', error);
                 showToast('⚠️ Ошибка загрузки');
-                
-                // Для теста
-                userData.game_login = 'Тест';
-                updateUserInfo();
-                updateUI();
             }
         }
         
@@ -560,14 +701,19 @@
             await performAction('collect');
         }
         
-        // СОХРАНЕНИЕ ИМЕНИ
+        // СОХРАНЕНИЕ ИМЕНИ (первый вход)
         async function saveGameLogin() {
             const loginInput = document.getElementById('newLogin');
-            const newLogin = loginInput.value.trim();
+            let newLogin = loginInput.value.trim();
             
             if (!newLogin) {
                 showToast('❌ Введите имя');
                 return;
+            }
+            
+            // Обрезаем до 12 символов
+            if (newLogin.length > 12) {
+                newLogin = newLogin.substring(0, 12);
             }
             
             const success = await performAction('set_login', { game_login: newLogin });
@@ -575,6 +721,28 @@
             if (success) {
                 document.getElementById('loginOverlay').style.display = 'none';
                 showToast(`✅ Добро пожаловать, ${newLogin}!`);
+            }
+        }
+        
+        // ИЗМЕНЕНИЕ ИМЕНИ (в настройках)
+        async function changeName() {
+            const nameInput = document.getElementById('changeNameInput');
+            let newName = nameInput.value.trim();
+            
+            if (!newName) {
+                showToast('❌ Введите имя');
+                return;
+            }
+            
+            if (newName.length > 12) {
+                newName = newName.substring(0, 12);
+            }
+            
+            const success = await performAction('set_login', { game_login: newName });
+            
+            if (success) {
+                nameInput.value = '';
+                showToast(`✅ Имя изменено на ${newName}`);
             }
         }
         
@@ -603,7 +771,6 @@
                 
                 if (data.success) {
                     showToast('✅ Клан создан!');
-                    document.getElementById('clanMenu').classList.add('hidden');
                     document.getElementById('clanName').value = '';
                     document.getElementById('clanTag').value = '';
                 }
@@ -617,25 +784,24 @@
                 const response = await fetch(`${API_URL}/api/clans/top`);
                 const data = await response.json();
                 
-                let html = '<h3>🏆 Топ кланов</h3>';
+                let html = '<h4 style="margin-bottom: 10px;">🏆 Топ игроков</h4>';
                 
                 if (!data.players || data.players.length === 0) {
-                    html += '<p>Пока нет игроков</p>';
+                    html += '<p style="color: #666;">Пока нет игроков</p>';
                 } else {
                     data.players.forEach((player, index) => {
                         html += `
-                            <div style="padding:10px; margin:5px; background:white; border-radius:8px;">
-                                <b>${index+1}. ${player.game_login || 'Без имени'}</b><br>
-                                Золото: ${player.gold}
+                            <div style="padding:8px; margin:5px 0; background:white; border-radius:8px; display:flex; justify-content:space-between;">
+                                <span><b>${index+1}.</b> ${player.game_login || 'Без имени'}</span>
+                                <span>🪙${player.gold}</span>
                             </div>
                         `;
                     });
                 }
                 
-                html += '<button class="button secondary" onclick="document.getElementById(\'topClans\').classList.add(\'hidden\')">Закрыть</button>';
+                html += '<button class="collect-btn" onclick="document.getElementById(\'topClans\').innerHTML = \'\'" style="margin-top:10px;">Закрыть</button>';
                 
                 document.getElementById('topClans').innerHTML = html;
-                document.getElementById('topClans').classList.remove('hidden');
             } catch (error) {
                 showToast('❌ Ошибка');
             }
@@ -645,14 +811,22 @@
         document.addEventListener('DOMContentLoaded', () => {
             login();
             
-            document.getElementById('collectBtn').addEventListener('click', collectResources);
-            document.getElementById('clanBtn').addEventListener('click', () => {
-                document.getElementById('clanMenu').classList.toggle('hidden');
-                document.getElementById('topClans').classList.add('hidden');
+            // Переключение вкладок
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    switchTab(tab.dataset.tab);
+                });
             });
+            
+            // Кнопки действий
+            document.getElementById('collectBtn').addEventListener('click', collectResources);
             document.getElementById('createClanBtn').addEventListener('click', createClan);
             document.getElementById('topClansBtn').addEventListener('click', showTopClans);
             document.getElementById('confirmLogin').addEventListener('click', saveGameLogin);
+            document.getElementById('changeNameBtn').addEventListener('click', changeName);
+            
+            // По умолчанию показываем город
+            switchTab('city');
         });
     </script>
 </body>
