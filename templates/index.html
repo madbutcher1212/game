@@ -1268,48 +1268,106 @@
         }
         
         // Авторизация
-        async function login() {
-            try {
-                const response = await fetch(`${API_URL}/api/auth`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ initData: tg.initData })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    userData.id = data.user.id;
-                    userData.username = data.user.username;
-                    userData.game_login = data.user.game_login || '';
-                    userData.gold = data.user.gold;
-                    userData.wood = data.user.wood;
-                    userData.food = data.user.food || 50;
-                    userData.stone = data.user.stone || 0;
-                    userData.level = data.user.level;
-                    userData.townHallLevel = data.user.townHallLevel || 1;
-                    userData.lastCollection = data.user.lastCollection || Date.now();
-                    
-                    buildings = data.buildings || [
-                        { id: 'house', count: 1, level: 1 },
-                        { id: 'farm', count: 1, level: 1 },
-                        { id: 'lumber', count: 1, level: 1 }
-                    ];
-                    
-                    updateUserInfo();
-                    updateCityUI();
-                    
-                    if (!userData.game_login) {
-                        document.getElementById('loginOverlay').style.display = 'flex';
-                    } else {
-                        document.getElementById('loginOverlay').style.display = 'none';
-                    }
-                }
-            } catch (error) {
-                console.error('Auth error:', error);
-                showToast('⚠️ Ошибка загрузки');
+      // В функции login() измени обработку ответа:
+
+async function login() {
+    try {
+        const response = await fetch(`${API_URL}/api/auth`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ initData: tg.initData })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            userData.id = data.user.id;
+            userData.username = data.user.username;
+            userData.game_login = data.user.game_login || '';
+            userData.gold = data.user.gold;
+            userData.wood = data.user.wood;
+            userData.food = data.user.food || 50;
+            userData.stone = data.user.stone || 0;
+            userData.level = data.user.level; // уровень игрока = уровень ратуши
+            userData.lastCollection = data.user.lastCollection || Date.now();
+            
+            buildings = data.buildings || [
+                { id: 'house', count: 1, level: 1 },
+                { id: 'farm', count: 1, level: 1 },
+                { id: 'lumber', count: 1, level: 1 }
+            ];
+            
+            updateUserInfo();
+            updateCityUI();
+            
+            if (!userData.game_login) {
+                document.getElementById('loginOverlay').style.display = 'flex';
+            } else {
+                document.getElementById('loginOverlay').style.display = 'none';
             }
         }
+    } catch (error) {
+        console.error('Auth error:', error);
+        showToast('⚠️ Ошибка загрузки');
+    }
+}
+
+// Функция улучшения уровня (ратуши)
+async function upgradeTownHall() {
+    if (userData.level >= 5) {
+        showToast('🏛️ Максимальный уровень');
+        return;
+    }
+    
+    await performAction('upgrade_level', {});
+}
+
+// В функции updateTownHallDisplay() используем userData.level
+function updateTownHallDisplay() {
+    const currentIncome = TOWN_HALL_INCOME[userData.level] || 0;
+    document.getElementById('townHallIncome').textContent = `+${currentIncome} 🪙/ч`;
+    document.getElementById('townHallLevel').textContent = userData.level;
+    document.getElementById('townHallLevelBadge').textContent = userData.level;
+    
+    if (userData.level < 5) {
+        const nextIncome = TOWN_HALL_INCOME[userData.level + 1] || 0;
+        document.getElementById('townHallNext').textContent = `⬆️ +${nextIncome} 🪙/ч`;
+    } else {
+        document.getElementById('townHallNext').textContent = `🏆 Макс. уровень`;
+    }
+}
+
+// В функции canUpgrade() проверяем уровень игрока
+function canUpgrade(buildingId, currentLevel) {
+    if (buildingId === 'townhall') {
+        if (currentLevel >= 5) return false;
+        const cost = TOWN_HALL_UPGRADE_COST[currentLevel + 1];
+        if (!cost) return false;
+        return userData.gold >= cost.gold && 
+               userData.wood >= cost.wood && 
+               userData.stone >= cost.stone;
+    }
+    
+    const config = BUILDINGS_CONFIG[buildingId];
+    if (!config) return false;
+    
+    if (currentLevel === 0) {
+        // Проверка на постройку
+        const cost = config.baseCost;
+        return userData.gold >= cost.gold && 
+               userData.wood >= cost.wood;
+    }
+    
+    if (currentLevel >= config.maxLevel) return false;
+    
+    // Проверяем уровень игрока для следующего уровня здания
+    if (userData.level < currentLevel + 1) return false;
+    
+    const cost = calculateBuildingCost(buildingId, currentLevel);
+    return userData.gold >= cost.gold && 
+           userData.wood >= cost.wood && 
+           userData.stone >= cost.stone;
+}
         
         // Сохранение имени (первый вход)
         async function saveGameLogin() {
