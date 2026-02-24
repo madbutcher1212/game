@@ -11,7 +11,6 @@ SUPABASE_URL = "https://xevwktdwyioyantuqntb.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhldndrdGR3eWlveWFudHVxbnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4ODI2NTAsImV4cCI6MjA4NzQ1ODY1MH0.jC8jqGBv_yrbYg_x4XQradxxbkDtsXsQ9EBT0Iabed4"
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 # ========================================
-
 @app.route('/')
 def index():
     print("➡️ Главная страница загружена")
