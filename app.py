@@ -7,7 +7,7 @@ from datetime import datetime
 app = Flask(__name__)
 
 # ========== ВАШ КЛЮЧ ==========
-SHEETY_URL = "https://api.sheety.co/3c7a64d22736a2e2d72dfc25150c8cd8/cityBuilderDb"
+SHEETY_URL = "https://api.sheety.co/3c7a64d22736a2e2d72dfc25150c8cd8/citybuilderdb"
 # ===============================
 
 @app.route('/')
@@ -171,3 +171,4 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     print(f"🚀 Сервер запущен на порту {port}")
     app.run(host='0.0.0.0', port=port, debug=True)
+
