@@ -6,9 +6,9 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# ========== ВАШ КЛЮЧ ==========
+# ========== ВАШ КЛЮЧ (правильный регистр) ==========
 SHEETY_URL = "https://api.sheety.co/3c7a64d22736a2e2d72dfc25150c8cd8/citybuilderdb"
-# ===============================
+# ===================================================
 
 @app.route('/')
 def index():
