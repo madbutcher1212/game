@@ -209,7 +209,7 @@ def auth():
         now = int(time.time() * 1000)
         
         if result.data and len(result.data) > 0:
-            # Пользователь найден
+            # Пользователь НАЙДЕН - загружаем его данные
             player = result.data[0]
             
             # Загружаем постройки
@@ -222,19 +222,21 @@ def auth():
                 except:
                     buildings = []
             
-            # ВАЖНО: Обновляем last_collection до текущего времени
-            # Это гарантирует, что таймер начнет отсчет заново при каждом входе
+            # Обновляем время последнего входа
             supabase.table("players") \
                 .update({'last_collection': now}) \
                 .eq('id', player['id']) \
                 .execute()
+            
+            # ВАЖНО: проверяем, есть ли у игрока game_login
+            game_login = player.get('game_login', '')
             
             return jsonify({
                 'success': True,
                 'user': {
                     'id': player.get('telegram_id'),
                     'username': player.get('username', ''),
-                    'game_login': player.get('game_login', ''),
+                    'game_login': game_login,  # Отправляем сохраненное имя
                     'gold': player.get('gold', 100),
                     'wood': player.get('wood', 50),
                     'food': player.get('food', 50),
@@ -246,7 +248,7 @@ def auth():
                 'config': BUILDINGS_CONFIG
             })
         else:
-            # Создаем нового игрока
+            # Создаем НОВОГО игрока
             initial_buildings = [
                 {"id": "house", "count": 1, "level": 1},
                 {"id": "farm", "count": 1, "level": 1},
@@ -256,7 +258,7 @@ def auth():
             new_player = {
                 'telegram_id': telegram_id,
                 'username': username,
-                'game_login': '',
+                'game_login': '',  # Пустое имя для нового игрока
                 'gold': 100,
                 'wood': 50,
                 'food': 50,
@@ -273,7 +275,7 @@ def auth():
                 'user': {
                     'id': telegram_id,
                     'username': username,
-                    'game_login': '',
+                    'game_login': '',  # Пустое имя = показать окно
                     'gold': 100,
                     'wood': 50,
                     'food': 50,
@@ -288,7 +290,7 @@ def auth():
     except Exception as e:
         print(f"❌ Ошибка авторизации: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
-
+        
 @app.route('/api/action', methods=['POST'])
 def game_action():
     """Выполнение игрового действия"""
@@ -589,4 +591,5 @@ def top_clans():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
+
 
