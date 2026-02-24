@@ -14,7 +14,7 @@ SUPABASE_URL = "https://xevwktdwyioyantuqntb.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhldndrdGR3eWlveWFudHVxbnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4ODI2NTAsImV4cCI6MjA4NzQ1ODY1MH0.jC8jqGBv_yrbYg_x4XQradxxbkDtsXsQ9EBT0Iabed4"
 
 # Токен твоего бота (нужен для проверки подписи)
-BOT_TOKEN = "5768337691:AAH5YkoiEuPk8-FZa32hStHTqXiLPtAEhx8"  # ВСТАВЬ СВОЙ ТОКЕН!
+BOT_TOKEN = "8596066162:AAEm2DSAFhKemedKC8rT4RfFY4fjUhVBCvI"  # ВСТАВЬ СВОЙ ТОКЕН!
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 # ================================
@@ -270,5 +270,6 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     print(f"🚀 Сервер запущен на порту {port}")
     app.run(host='0.0.0.0', port=port, debug=True)
+
 
 
