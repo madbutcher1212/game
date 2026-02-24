@@ -13,78 +13,86 @@ app = Flask(__name__)
 SUPABASE_URL = "https://xevwktdwyioyantuqntb.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhldndrdGR3eWlveWFudHVxbnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4ODI2NTAsImV4cCI6MjA4NzQ1ODY1MH0.jC8jqGBv_yrbYg_x4XQradxxbkDtsXsQ9EBT0Iabed4"
 
-# Токен твоего бота (из @BotFather)
+# Токен твоего бота
 BOT_TOKEN = "8596066162:AAEm2DSAFhKemedKC8rT4RfFY4fjUhVBCvI"
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 # ================================
 
-# Конфиг зданий (единый источник правды на сервере)
+# Доход ратуши по уровням
+TOWN_HALL_INCOME = {
+    1: 5,
+    2: 10,
+    3: 25,
+    4: 50,
+    5: 100
+}
+
+# Стоимость улучшения ратуши
+TOWN_HALL_UPGRADE_COST = {
+    2: {"gold": 50, "wood": 20, "stone": 0},
+    3: {"gold": 300, "wood": 100, "stone": 30},
+    4: {"gold": 1000, "wood": 250, "stone": 100},
+    5: {"gold": 5000, "wood": 1000, "stone": 400}
+}
+
+# Конфиг зданий
 BUILDINGS_CONFIG = {
-    'house': {
-        'name': '🏠 Дом',
-        'icon': '🏠',
-        'cost_gold': 50,
-        'cost_wood': 20,
-        'cost_stone': 0,
-        'cost_food': 0,
-        'gold_prod': 0,
-        'wood_prod': 0,
-        'food_prod': 0,
-        'stone_prod': 0,
-        'population': 2
+    "house": {
+        "name": "Жилой район",
+        "icon": "🏘️",
+        "section": "social",
+        "max_level": 5,
+        "base_cost": {"gold": 50, "wood": 20, "stone": 0},
+        "income": [
+            {"gold": 0, "wood": 0, "food": 0, "stone": 0},  # 1 ур
+            {"gold": 0, "wood": 0, "food": 0, "stone": 0},  # 2 ур
+            {"gold": 0, "wood": 0, "food": 0, "stone": 0},  # 3 ур
+            {"gold": 0, "wood": 0, "food": 0, "stone": 0},  # 4 ур
+            {"gold": 0, "wood": 0, "food": 0, "stone": 0}   # 5 ур
+        ]
     },
-    'farm': {
-        'name': '🌾 Ферма',
-        'icon': '🌾',
-        'cost_gold': 30,
-        'cost_wood': 40,
-        'cost_stone': 0,
-        'cost_food': 0,
-        'gold_prod': 0,
-        'wood_prod': 0,
-        'food_prod': 8,      # Ферма даёт 8 пищи
-        'stone_prod': 0,
-        'population': 0
+    "farm": {
+        "name": "Ферма",
+        "icon": "🌾",
+        "section": "economic",
+        "max_level": 5,
+        "base_cost": {"gold": 30, "wood": 40, "stone": 0},
+        "income": [
+            {"food": 10},  # 1 ур
+            {"food": 20},  # 2 ур
+            {"food": 35},  # 3 ур
+            {"food": 55},  # 4 ур
+            {"food": 80}   # 5 ур
+        ]
     },
-    'lumber': {
-        'name': '🪵 Лесопилка',
-        'icon': '🪵',
-        'cost_gold': 40,
-        'cost_wood': 30,
-        'cost_stone': 0,
-        'cost_food': 0,
-        'gold_prod': 0,
-        'wood_prod': 4,
-        'food_prod': 0,
-        'stone_prod': 0,
-        'population': 1
+    "lumber": {
+        "name": "Лесопилка",
+        "icon": "🪵",
+        "section": "economic",
+        "max_level": 5,
+        "base_cost": {"gold": 40, "wood": 30, "stone": 0},
+        "income": [
+            {"wood": 10},  # 1 ур
+            {"wood": 20},  # 2 ур
+            {"wood": 35},  # 3 ур
+            {"wood": 55},  # 4 ур
+            {"wood": 80}   # 5 ур
+        ]
     },
-    'quarry': {  # НОВОЕ: Каменоломня
-        'name': '⛰️ Каменоломня',
-        'icon': '⛰️',
-        'cost_gold': 60,
-        'cost_wood': 40,
-        'cost_stone': 0,
-        'cost_food': 0,
-        'gold_prod': 0,
-        'wood_prod': 0,
-        'food_prod': 0,
-        'stone_prod': 3,      # Даёт 3 камня
-        'population': 1
-    },
-    'market': {
-        'name': '🏪 Рынок',
-        'icon': '🏪',
-        'cost_gold': 80,
-        'cost_wood': 60,
-        'cost_stone': 20,
-        'cost_food': 0,
-        'gold_prod': 10,
-        'wood_prod': 2,
-        'food_prod': 0,
-        'stone_prod': 0,
-        'population': 2
+    "quarry": {
+        "name": "Каменоломня",
+        "icon": "⛰️",
+        "section": "economic",
+        "max_level": 5,
+        "base_cost": {"gold": 60, "wood": 40, "stone": 0},
+        "income": [
+            {"stone": 3},   # 1 ур
+            {"stone": 7},   # 2 ур
+            {"stone": 12},  # 3 ур
+            {"stone": 18},  # 4 ур
+            {"stone": 25}   # 5 ур
+        ]
     }
 }
 
@@ -125,24 +133,58 @@ def verify_telegram_data(init_data: str):
             user_data = json.loads(parsed_data['user'][0])
             print(f"✅ Данные проверены, пользователь: {user_data.get('id')}")
             return user_data
-        else:
-            print("❌ Нет данных пользователя в initData")
-            return None
+        
+        return None
         
     except Exception as e:
         print(f"❌ Ошибка при проверке данных: {e}")
         return None
 
+def calculate_building_cost(building_id, level):
+    """Рассчитывает стоимость улучшения здания"""
+    config = BUILDINGS_CONFIG.get(building_id)
+    if not config:
+        return {"gold": 0, "wood": 0, "stone": 0}
+    
+    multiplier = level + 1
+    return {
+        "gold": config["base_cost"]["gold"] * multiplier,
+        "wood": config["base_cost"]["wood"] * multiplier,
+        "stone": config["base_cost"]["stone"] * multiplier
+    }
+
+def calculate_hourly_income(buildings, town_hall_level):
+    """Рассчитывает общий доход в час"""
+    income = {
+        "gold": TOWN_HALL_INCOME.get(town_hall_level, 0),
+        "wood": 0,
+        "food": 0,
+        "stone": 0
+    }
+    
+    for b in buildings:
+        building_id = b["id"]
+        level = b["level"]
+        count = b.get("count", 1)
+        
+        config = BUILDINGS_CONFIG.get(building_id)
+        if not config or level == 0:
+            continue
+            
+        level_income = config["income"][level - 1]
+        for resource, value in level_income.items():
+            if resource in income:
+                income[resource] += value * count
+    
+    return income
+
 @app.route('/')
 def index():
-    print("➡️ Главная страница загружена")
     return render_template('index.html')
 
 @app.route('/api/auth', methods=['POST'])
 def auth():
     """Авторизация пользователя"""
-    print("➡️ Получен запрос /api/auth")
-    
     data = request.json
     init_data = data.get('initData', '')
     
@@ -150,16 +192,14 @@ def auth():
         return jsonify({'success': False, 'error': 'No initData'}), 400
     
     telegram_user = verify_telegram_data(init_data)
-    
     if not telegram_user:
         return jsonify({'success': False, 'error': 'Invalid Telegram data'}), 401
     
     telegram_id = str(telegram_user['id'])
     username = telegram_user.get('username', '')
     
-    print(f"👤 Авторизация пользователя: {telegram_id}, @{username}")
-    
     try:
+        # Ищем пользователя
         result = supabase.table("players") \
             .select("*") \
             .eq("telegram_id", telegram_id) \
@@ -167,8 +207,8 @@ def auth():
         
         if result.data and len(result.data) > 0:
             player = result.data[0]
-            print(f"✅ Игрок найден в Supabase: {player.get('game_login')}")
             
+            # Загружаем постройки
             buildings = []
             if player.get('buildings'):
                 try:
@@ -184,15 +224,22 @@ def auth():
                     'game_login': player.get('game_login', ''),
                     'gold': player.get('gold', 100),
                     'wood': player.get('wood', 50),
-                    'food': player.get('food', 50),     # НОВОЕ
-                    'stone': player.get('stone', 0),    # НОВОЕ
-                    'level': player.get('level', 1)
+                    'food': player.get('food', 50),
+                    'stone': player.get('stone', 0),
+                    'level': player.get('level', 1),
+                    'townHallLevel': player.get('town_hall_level', 1),
+                    'lastCollection': player.get('last_collection', datetime.now().timestamp() * 1000)
                 },
                 'buildings': buildings,
                 'config': BUILDINGS_CONFIG
             })
         else:
-            print(f"👤 Создаем нового игрока с telegram_id {telegram_id}")
+            # Создаем нового игрока с начальными постройками
+            initial_buildings = json.dumps([
+                {"id": "house", "count": 1, "level": 1},
+                {"id": "farm", "count": 1, "level": 1},
+                {"id": "lumber", "count": 1, "level": 1}
+            ])
             
             new_player = {
                 'telegram_id': telegram_id,
@@ -200,17 +247,15 @@ def auth():
                 'game_login': '',
                 'gold': 100,
                 'wood': 50,
-                'food': 50,      # НОВОЕ: начальная пища
-                'stone': 0,       # НОВОЕ: начальный камень
+                'food': 50,
+                'stone': 0,
                 'level': 1,
-                'buildings': json.dumps([])
+                'town_hall_level': 1,
+                'buildings': initial_buildings,
+                'last_collection': datetime.now().timestamp() * 1000
             }
             
-            insert_result = supabase.table("players") \
-                .insert(new_player) \
-                .execute()
-            
-            print(f"✅ Новый игрок создан")
+            supabase.table("players").insert(new_player).execute()
             
             return jsonify({
                 'success': True,
@@ -220,23 +265,23 @@ def auth():
                     'game_login': '',
                     'gold': 100,
                     'wood': 50,
-                    'food': 50,    # НОВОЕ
-                    'stone': 0,     # НОВОЕ
-                    'level': 1
+                    'food': 50,
+                    'stone': 0,
+                    'level': 1,
+                    'townHallLevel': 1,
+                    'lastCollection': datetime.now().timestamp() * 1000
                 },
-                'buildings': [],
+                'buildings': json.loads(initial_buildings),
                 'config': BUILDINGS_CONFIG
             })
             
     except Exception as e:
-        print(f"❌ Ошибка при работе с Supabase: {e}")
+        print(f"❌ Ошибка авторизации: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/action', methods=['POST'])
 def game_action():
     """Выполнение игрового действия"""
-    print("➡️ Получен запрос /api/action")
-    
     data = request.json
     init_data = data.get('initData', '')
     action_type = data.get('action')
@@ -249,6 +294,7 @@ def game_action():
     telegram_id = str(telegram_user['id'])
     
     try:
+        # Получаем игрока
         result = supabase.table("players") \
             .select("*") \
             .eq("telegram_id", telegram_id) \
@@ -260,13 +306,15 @@ def game_action():
         player = result.data[0]
         player_id = player['id']
         
-        # Текущие ресурсы (включая новые)
+        # Текущие данные
         gold = player['gold']
         wood = player['wood']
-        food = player.get('food', 50)      # НОВОЕ: получаем из БД
-        stone = player.get('stone', 0)      # НОВОЕ: получаем из БД
-        level = player['level']
+        food = player.get('food', 50)
+        stone = player.get('stone', 0)
+        town_hall_level = player.get('town_hall_level', 1)
+        last_collection = player.get('last_collection', datetime.now().timestamp() * 1000)
         
+        # Загружаем постройки
         buildings = []
         if player.get('buildings'):
             try:
@@ -274,119 +322,195 @@ def game_action():
             except:
                 buildings = []
         
-        buildings_dict = {}
-        for b in buildings:
-            buildings_dict[b['id']] = b['count']
-        
         response_data = {'success': True}
         
-        if action_type == 'build':
+        # Обработка действий
+        if action_type == 'collect':
+            # Сбор ресурсов
+            now = datetime.now().timestamp() * 1000
+            time_passed = now - last_collection
+            hours_passed = time_passed / (60 * 60 * 1000)
+            
+            if hours_passed > 0:
+                income = calculate_hourly_income(buildings, town_hall_level)
+                
+                gold += int(income["gold"] * hours_passed)
+                wood += int(income["wood"] * hours_passed)
+                food += int(income["food"] * hours_passed)
+                stone += int(income["stone"] * hours_passed)
+                
+                last_collection = now
+                
+                # Сохраняем
+                supabase.table("players") \
+                    .update({
+                        'gold': gold,
+                        'wood': wood,
+                        'food': food,
+                        'stone': stone,
+                        'last_collection': last_collection
+                    }) \
+                    .eq('id', player_id) \
+                    .execute()
+            
+            response_data['state'] = {
+                'gold': gold,
+                'wood': wood,
+                'food': food,
+                'stone': stone,
+                'townHallLevel': town_hall_level,
+                'buildings': buildings,
+                'lastCollection': last_collection
+            }
+            
+        elif action_type == 'build':
+            # Постройка нового здания
             building_id = action_data.get('building_id')
             
             if building_id not in BUILDINGS_CONFIG:
                 return jsonify({'success': False, 'error': 'Unknown building'})
             
-            config = BUILDINGS_CONFIG[building_id]
+            # Проверяем, есть ли уже такое здание
+            existing = None
+            for b in buildings:
+                if b['id'] == building_id:
+                    existing = b
+                    break
             
-            # Проверяем все ресурсы
-            if gold < config['cost_gold'] or \
-               wood < config['cost_wood'] or \
-               food < config['cost_food'] or \
-               stone < config['cost_stone']:
+            if existing:
+                return jsonify({'success': False, 'error': 'Building already exists'})
+            
+            # Проверяем ресурсы
+            cost = BUILDINGS_CONFIG[building_id]["base_cost"]
+            if gold < cost['gold'] or wood < cost['wood']:
                 return jsonify({'success': False, 'error': 'Not enough resources'})
             
             # Списываем ресурсы
-            gold -= config['cost_gold']
-            wood -= config['cost_wood']
-            food -= config['cost_food']
-            stone -= config['cost_stone']
+            gold -= cost['gold']
+            wood -= cost['wood']
             
-            # Увеличиваем счётчик построек
-            current_count = buildings_dict.get(building_id, 0)
-            buildings_dict[building_id] = current_count + 1
+            # Добавляем здание 1 уровня
+            buildings.append({
+                "id": building_id,
+                "count": 1,
+                "level": 1
+            })
             
-            # Пересчитываем уровень
-            total_buildings = sum(buildings_dict.values())
-            new_level = total_buildings // 5 + 1
-            
-            # Преобразуем обратно в список
-            new_buildings = []
-            for bid, count in buildings_dict.items():
-                new_buildings.append({'id': bid, 'count': count})
-            
-            # Сохраняем в БД (включая новые ресурсы)
+            # Сохраняем
             supabase.table("players") \
                 .update({
                     'gold': gold,
                     'wood': wood,
-                    'food': food,      # НОВОЕ
-                    'stone': stone,    # НОВОЕ
-                    'level': new_level,
-                    'buildings': json.dumps(new_buildings)
+                    'buildings': json.dumps(buildings)
                 }) \
                 .eq('id', player_id) \
                 .execute()
             
-            print(f"✅ Построено {building_id}")
-            
             response_data['state'] = {
                 'gold': gold,
                 'wood': wood,
-                'food': food,      # НОВОЕ
-                'stone': stone,    # НОВОЕ
-                'level': new_level,
-                'buildings': new_buildings
+                'food': food,
+                'stone': stone,
+                'townHallLevel': town_hall_level,
+                'buildings': buildings,
+                'lastCollection': last_collection
             }
             
-        elif action_type == 'collect':
-            # Сбор ресурсов (включая пищу и камень)
-            gold_income = 0
-            wood_income = 0
-            food_income = 0    # НОВОЕ
-            stone_income = 0   # НОВОЕ
+        elif action_type == 'upgrade':
+            # Улучшение здания
+            building_id = action_data.get('building_id')
             
-            for bid, count in buildings_dict.items():
-                if bid in BUILDINGS_CONFIG:
-                    config = BUILDINGS_CONFIG[bid]
-                    gold_income += config['gold_prod'] * count
-                    wood_income += config['wood_prod'] * count
-                    food_income += config['food_prod'] * count     # НОВОЕ
-                    stone_income += config['stone_prod'] * count   # НОВОЕ
+            # Находим здание
+            building = None
+            for b in buildings:
+                if b['id'] == building_id:
+                    building = b
+                    break
             
-            # Базовый доход от уровня
-            gold_income += level * 2
-            wood_income += level * 1
-            food_income += level * 1      # НОВОЕ: +1 пищи за уровень
-            stone_income += level * 0      # Камень только с каменоломен
+            if not building:
+                return jsonify({'success': False, 'error': 'Building not found'})
             
-            gold += gold_income
-            wood += wood_income
-            food += food_income            # НОВОЕ
-            stone += stone_income          # НОВОЕ
+            current_level = building['level']
             
-            # Сохраняем в БД
+            if current_level >= BUILDINGS_CONFIG[building_id]["max_level"]:
+                return jsonify({'success': False, 'error': 'Max level reached'})
+            
+            # Проверяем уровень ратуши
+            if town_hall_level < current_level + 1:
+                return jsonify({'success': False, 'error': f'Town hall level {current_level + 1} required'})
+            
+            # Рассчитываем стоимость
+            cost = calculate_building_cost(building_id, current_level)
+            
+            if gold < cost['gold'] or wood < cost['wood'] or stone < cost['stone']:
+                return jsonify({'success': False, 'error': 'Not enough resources'})
+            
+            # Списываем ресурсы
+            gold -= cost['gold']
+            wood -= cost['wood']
+            stone -= cost['stone']
+            
+            # Увеличиваем уровень
+            building['level'] = current_level + 1
+            
+            # Сохраняем
             supabase.table("players") \
                 .update({
                     'gold': gold,
                     'wood': wood,
-                    'food': food,      # НОВОЕ
-                    'stone': stone     # НОВОЕ
+                    'stone': stone,
+                    'buildings': json.dumps(buildings)
                 }) \
                 .eq('id', player_id) \
                 .execute()
             
-            print(f"✅ Собрано: +{gold_income}💰, +{wood_income}🪵, +{food_income}🌾, +{stone_income}⛰️")
+            response_data['state'] = {
+                'gold': gold,
+                'wood': wood,
+                'food': food,
+                'stone': stone,
+                'townHallLevel': town_hall_level,
+                'buildings': buildings,
+                'lastCollection': last_collection
+            }
+            
+        elif action_type == 'upgrade_townhall':
+            # Улучшение ратуши
+            if town_hall_level >= 5:
+                return jsonify({'success': False, 'error': 'Town hall already max level'})
+            
+            cost = TOWN_HALL_UPGRADE_COST.get(town_hall_level + 1, {})
+            
+            if gold < cost.get('gold', 0) or wood < cost.get('wood', 0) or stone < cost.get('stone', 0):
+                return jsonify({'success': False, 'error': 'Not enough resources'})
+            
+            gold -= cost.get('gold', 0)
+            wood -= cost.get('wood', 0)
+            stone -= cost.get('stone', 0)
+            town_hall_level += 1
+            
+            supabase.table("players") \
+                .update({
+                    'gold': gold,
+                    'wood': wood,
+                    'stone': stone,
+                    'town_hall_level': town_hall_level
+                }) \
+                .eq('id', player_id) \
+                .execute()
             
             response_data['state'] = {
                 'gold': gold,
                 'wood': wood,
-                'food': food,      # НОВОЕ
-                'stone': stone,    # НОВОЕ
-                'level': level,
-                'buildings': buildings
+                'food': food,
+                'stone': stone,
+                'townHallLevel': town_hall_level,
+                'buildings': buildings,
+                'lastCollection': last_collection
             }
             
         elif action_type == 'set_login':
+            # Установка имени
             new_login = action_data.get('game_login', '').strip()
             
             if not new_login:
@@ -397,16 +521,15 @@ def game_action():
                 .eq('id', player_id) \
                 .execute()
             
-            print(f"✅ Имя изменено на: {new_login}")
-            
             response_data['state'] = {
                 'game_login': new_login,
                 'gold': gold,
                 'wood': wood,
-                'food': food,      # НОВОЕ
-                'stone': stone,    # НОВОЕ
-                'level': level,
-                'buildings': buildings
+                'food': food,
+                'stone': stone,
+                'townHallLevel': town_hall_level,
+                'buildings': buildings,
+                'lastCollection': last_collection
             }
         
         else:
@@ -415,7 +538,7 @@ def game_action():
         return jsonify(response_data)
         
     except Exception as e:
-        print(f"❌ Ошибка при выполнении действия: {e}")
+        print(f"❌ Ошибка действия: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/clan/create', methods=['POST'])
@@ -436,5 +559,4 @@ def top_clans():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    print(f"🚀 Сервер запущен на порту {port}")
     app.run(host='0.0.0.0', port=port, debug=True)
