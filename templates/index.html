@@ -205,7 +205,7 @@
             right: 0;
             bottom: 0;
             background: rgba(0,0,0,0.8);
-            display: flex;
+            display: none;  /* По умолчанию скрыто */
             align-items: center;
             justify-content: center;
             z-index: 2000;
@@ -258,7 +258,7 @@
     </div>
 
     <div class="game">
-        <!-- Шапка с профилем (вместо надписи Градострой) -->
+        <!-- Шапка с профилем -->
         <div class="header">
             <div class="avatar" id="avatar">👤</div>
             <div class="user-info">
@@ -361,16 +361,6 @@
             updateAvatar();
         }
         
-        // Проверка, нужно ли показать окно выбора логина
-        function checkFirstLogin() {
-            // Если нет игрового логина и это первый вход
-            if (!userData.game_login && userData.id) {
-                document.getElementById('loginOverlay').style.display = 'flex';
-            } else {
-                document.getElementById('loginOverlay').style.display = 'none';
-            }
-        }
-        
         // Сохранение выбранного логина
         async function saveGameLogin() {
             const loginInput = document.getElementById('newLogin');
@@ -417,7 +407,13 @@
                     userData.game_login = data.user.game_login || ''; // Загружаем сохраненный логин
                     
                     updateUserInfo();
-                    checkFirstLogin();
+                    
+                    // ВАЖНО: Показываем окно ТОЛЬКО если у игрока нет логина
+                    if (!userData.game_login) {
+                        document.getElementById('loginOverlay').style.display = 'flex';
+                    } else {
+                        document.getElementById('loginOverlay').style.display = 'none';
+                    }
                 }
             } catch (error) {
                 console.error('Auth error:', error);
@@ -599,8 +595,8 @@
             document.getElementById('topClansBtn').addEventListener('click', showTopClans);
             document.getElementById('confirmLogin').addEventListener('click', saveGameLogin);
             
-            // Сохранение каждую секунду
-            setInterval(saveProgress, 1000);
+            // Сохранение каждую секунду (можно уменьшить до 5-10 секунд)
+            setInterval(saveProgress, 5000); // Теперь раз в 5 секунд
             
             // Сохраняем при закрытии
             window.addEventListener('beforeunload', saveProgress);
