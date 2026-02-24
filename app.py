@@ -22,15 +22,19 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Доход ратуши по уровням
 TOWN_HALL_INCOME = {
-    1: 5, 2: 10, 3: 25, 4: 50, 5: 100
+    1: 5,
+    2: 10,
+    3: 20,
+    4: 45,
+    5: 100
 }
 
-# Стоимость улучшения уровня игрока (ратуши)
+# Стоимость улучшения ратуши
 TOWN_HALL_UPGRADE_COST = {
-    2: {"gold": 50, "wood": 20, "stone": 0},
-    3: {"gold": 300, "wood": 100, "stone": 30},
-    4: {"gold": 1000, "wood": 250, "stone": 100},
-    5: {"gold": 5000, "wood": 1000, "stone": 400}
+    2: {"gold": 50, "wood": 100, "stone": 0},
+    3: {"gold": 500, "wood": 400, "stone": 0},
+    4: {"gold": 2000, "wood": 1200, "stone": 250},
+    5: {"gold": 10000, "wood": 6000, "stone": 2500}
 }
 
 # Конфиг зданий
@@ -40,12 +44,12 @@ BUILDINGS_CONFIG = {
         "icon": "🏘️",
         "section": "social",
         "max_level": 5,
-        "base_cost": {"gold": 50, "wood": 20, "stone": 0},
+        "base_cost": {"gold": 50, "wood": 20, "stone": 0},  # 1 уровень уже построен
         "upgrade_costs": [
-            {"gold": 80, "wood": 40, "stone": 0},    # 1->2
-            {"gold": 200, "wood": 100, "stone": 0},  # 2->3
-            {"gold": 550, "wood": 240, "stone": 0},  # 3->4
-            {"gold": 1500, "wood": 520, "stone": 0}  # 4->5
+            {"gold": 50, "wood": 100, "stone": 50},     # 1->2
+            {"gold": 250, "wood": 300, "stone": 125},   # 2->3
+            {"gold": 1500, "wood": 1000, "stone": 400}, # 3->4
+            {"gold": 7200, "wood": 5300, "stone": 2450} # 4->5
         ],
         "population_bonus": [20, 20, 40, 100, 250]  # Бонус за каждый уровень
     },
@@ -54,19 +58,19 @@ BUILDINGS_CONFIG = {
         "icon": "🌾",
         "section": "economic",
         "max_level": 5,
-        "base_cost": {"gold": 30, "wood": 40, "stone": 0},
+        "base_cost": {"gold": 30, "wood": 40, "stone": 0},  # 1 уровень уже построен
         "upgrade_costs": [
-            {"gold": 60, "wood": 80, "stone": 0},    # 1->2
-            {"gold": 120, "wood": 160, "stone": 0},  # 2->3
-            {"gold": 240, "wood": 320, "stone": 0},  # 3->4
-            {"gold": 480, "wood": 640, "stone": 0}   # 4->5
+            {"gold": 50, "wood": 100, "stone": 0},     # 1->2
+            {"gold": 250, "wood": 300, "stone": 0},    # 2->3
+            {"gold": 1000, "wood": 1000, "stone": 150},# 3->4
+            {"gold": 5200, "wood": 6300, "stone": 2450}# 4->5
         ],
         "income": [
-            {"food": 10},
-            {"food": 20},
-            {"food": 35},
-            {"food": 55},
-            {"food": 80}
+            {"food": 10},   # 1 ур
+            {"food": 25},   # 2 ур
+            {"food": 60},   # 3 ур
+            {"food": 120},  # 4 ур
+            {"food": 260}   # 5 ур
         ]
     },
     "lumber": {
@@ -74,19 +78,19 @@ BUILDINGS_CONFIG = {
         "icon": "🪵",
         "section": "economic",
         "max_level": 5,
-        "base_cost": {"gold": 40, "wood": 30, "stone": 0},
+        "base_cost": {"gold": 40, "wood": 30, "stone": 0},  # 1 уровень уже построен
         "upgrade_costs": [
-            {"gold": 80, "wood": 60, "stone": 0},    # 1->2
-            {"gold": 160, "wood": 120, "stone": 0},  # 2->3
-            {"gold": 320, "wood": 240, "stone": 0},  # 3->4
-            {"gold": 640, "wood": 480, "stone": 0}   # 4->5
+            {"gold": 50, "wood": 100, "stone": 0},     # 1->2
+            {"gold": 350, "wood": 200, "stone": 50},   # 2->3
+            {"gold": 1300, "wood": 900, "stone": 550}, # 3->4
+            {"gold": 7000, "wood": 4500, "stone": 3500}# 4->5
         ],
         "income": [
-            {"wood": 10},
-            {"wood": 20},
-            {"wood": 35},
-            {"wood": 55},
-            {"wood": 80}
+            {"wood": 10},   # 1 ур
+            {"wood": 20},   # 2 ур
+            {"wood": 40},   # 3 ур
+            {"wood": 100},  # 4 ур
+            {"wood": 200}   # 5 ур
         ]
     },
     "quarry": {
@@ -94,19 +98,19 @@ BUILDINGS_CONFIG = {
         "icon": "⛰️",
         "section": "economic",
         "max_level": 5,
-        "base_cost": {"gold": 60, "wood": 40, "stone": 0},
+        "base_cost": {"gold": 20, "wood": 80, "stone": 0},  # 1 уровень нужно строить
         "upgrade_costs": [
-            {"gold": 120, "wood": 80, "stone": 20},    # 1->2
-            {"gold": 240, "wood": 160, "stone": 50},   # 2->3
-            {"gold": 480, "wood": 320, "stone": 120},  # 3->4
-            {"gold": 960, "wood": 640, "stone": 250}   # 4->5
+            {"gold": 50, "wood": 150, "stone": 0},     # 1->2
+            {"gold": 250, "wood": 350, "stone": 100},  # 2->3
+            {"gold": 1000, "wood": 1700, "stone": 150},# 3->4
+            {"gold": 6200, "wood": 7300, "stone": 1450}# 4->5
         ],
         "income": [
-            {"stone": 3},
-            {"stone": 7},
-            {"stone": 12},
-            {"stone": 18},
-            {"stone": 25}
+            {"stone": 5},   # 1 ур
+            {"stone": 15},  # 2 ур
+            {"stone": 35},  # 3 ур
+            {"stone": 80},  # 4 ур
+            {"stone": 160}  # 5 ур
         ]
     }
 }
@@ -161,7 +165,6 @@ def calculate_building_upgrade_cost(building_id, current_level):
     if not config or current_level >= config["max_level"]:
         return {"gold": 0, "wood": 0, "stone": 0}
     
-    # Используем upgrade_costs если есть, иначе рассчитываем по base_cost
     if "upgrade_costs" in config:
         return config["upgrade_costs"][current_level - 1]
     else:
@@ -180,14 +183,13 @@ def calculate_population_max(buildings):
         if b["id"] == "house":
             house_level = b["level"]
             config = BUILDINGS_CONFIG["house"]
-            # Суммируем бонусы за все уровни
             for i in range(house_level):
                 max_pop += config["population_bonus"][i]
             break
     
     return max_pop
 
-def calculate_hourly_income_and_growth(buildings, town_hall_level, current_population, max_population):
+def calculate_hourly_income_and_growth(buildings, town_hall_level, current_population, max_population, current_food):
     """Рассчитывает доход и рост населения"""
     # Базовый доход от ратуши
     income = {
@@ -217,12 +219,11 @@ def calculate_hourly_income_and_growth(buildings, town_hall_level, current_popul
     food_needed = current_population
     
     population_growth = 0
-    if food_production >= food_needed:
-        # Еды хватает
-        food_left = food_production - food_needed
+    food_left = food_production - food_needed
+    
+    if food_left >= 0:
+        # Еды хватает - население растет
         income["food"] = food_left
-        
-        # Рост населения
         potential_growth = 3
         new_population = current_population + potential_growth
         if new_population <= max_population:
@@ -230,9 +231,18 @@ def calculate_hourly_income_and_growth(buildings, town_hall_level, current_popul
         else:
             population_growth = max_population - current_population
     else:
-        # Еды не хватает - вся еда уходит на прокорм
-        income["food"] = 0
-        population_growth = 0
+        # Еды не хватает - проверяем запасы
+        total_food_available = current_food + food_production
+        if total_food_available >= food_needed:
+            # Можем покрыть из запасов
+            income["food"] = total_food_available - food_needed
+            # Население не растет, но и не умирает
+            population_growth = 0
+        else:
+            # Катастрофа - еды нет совсем
+            income["food"] = 0
+            population_growth = 0
+            # Здесь можно добавить механизм голода, но пока просто не растем
     
     return income, population_growth
 
@@ -276,7 +286,6 @@ def auth():
                 except:
                     buildings = []
             
-            # Пересчитываем max_population на всякий случай
             max_population = calculate_population_max(buildings)
             
             supabase.table("players") \
@@ -404,31 +413,32 @@ def game_action():
         response_data = {'success': True}
         
         if action_type == 'collect':
-            # Сбор ресурсов и рост населения
             now = int(time.time() * 1000)
             time_passed = now - last_collection
             hours_passed = time_passed / (60 * 60 * 1000)
             
             if hours_passed > 0:
-                # Считаем доход с учетом населения
                 total_gold_gain = 0
                 total_wood_gain = 0
                 total_food_gain = 0
                 total_stone_gain = 0
                 total_population_gain = 0
                 
-                # Симулируем каждый час
                 current_pop = population_current
-                for _ in range(int(hours_passed)):
+                current_food_stock = food
+                
+                for hour in range(int(hours_passed)):
                     income, growth = calculate_hourly_income_and_growth(
-                        buildings, level, current_pop, population_max
+                        buildings, level, current_pop, population_max, current_food_stock
                     )
                     total_gold_gain += income["gold"]
                     total_wood_gain += income["wood"]
                     total_food_gain += income["food"]
                     total_stone_gain += income["stone"]
                     total_population_gain += growth
+                    
                     current_pop += growth
+                    current_food_stock += income["food"]  # Обновляем запасы еды
                 
                 gold += total_gold_gain
                 wood += total_wood_gain
@@ -468,7 +478,6 @@ def game_action():
             if building_id not in BUILDINGS_CONFIG:
                 return jsonify({'success': False, 'error': 'Unknown building'})
             
-            # Проверяем, нет ли уже такого здания
             existing = None
             for b in buildings:
                 if b['id'] == building_id:
@@ -491,7 +500,6 @@ def game_action():
                 "level": 1
             })
             
-            # Пересчитываем макс население
             population_max = calculate_population_max(buildings)
             
             supabase.table("players") \
@@ -551,7 +559,6 @@ def game_action():
             
             building['level'] = current_level + 1
             
-            # Пересчитываем макс население
             population_max = calculate_population_max(buildings)
             
             supabase.table("players") \
