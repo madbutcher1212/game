@@ -15,12 +15,14 @@ body {
 .game {
     max-width: 400px;
     width: 100%;
-    background: rgba(255, 255, 255, 0.95);
+    background: white;
     display: flex;
     flex-direction: column;
     height: 100vh;
+    position: relative;
 }
 
+/* Верхний бар */
 .top-bar-fixed {
     position: sticky;
     top: 0;
@@ -28,6 +30,7 @@ body {
     padding: 12px 16px 8px;
     border-bottom: 2px solid #f0f0f0;
     z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
 .top-bar {
@@ -48,6 +51,7 @@ body {
     font-size: 18px;
     font-weight: bold;
     overflow: hidden;
+    flex-shrink: 0;
 }
 
 .avatar-img {
@@ -59,6 +63,7 @@ body {
 .user-info {
     flex: 1;
     min-width: 0;
+    max-width: 140px;
 }
 
 .name-level {
@@ -74,7 +79,7 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 120px;
+    max-width: 100px;
 }
 
 .level-badge {
@@ -84,6 +89,7 @@ body {
     border-radius: 20px;
     font-size: 13px;
     font-weight: bold;
+    flex-shrink: 0;
 }
 
 .user-login {
@@ -96,20 +102,21 @@ body {
 
 .resources-compact {
     display: flex;
-    gap: 12px;
+    gap: 8px;
     background: #f0f0f0;
     border-radius: 16px;
-    padding: 6px 12px;
+    padding: 4px 8px;
+    flex-shrink: 0;
 }
 
 .resource-block {
     display: flex;
     align-items: center;
-    gap: 4px;
-    font-size: 14px;
+    gap: 2px;
+    font-size: 13px;
     font-weight: bold;
     cursor: pointer;
-    padding: 2px 6px;
+    padding: 2px 4px;
     border-radius: 8px;
 }
 
@@ -117,6 +124,53 @@ body {
     background: rgba(0,0,0,0.05);
 }
 
+.resource-income {
+    font-size: 10px;
+    color: #4CAF50;
+    margin-left: 2px;
+}
+
+.resource-income-negative {
+    font-size: 10px;
+    color: #ff4444;
+    margin-left: 2px;
+}
+
+/* Таймер */
+.income-timer {
+    background: #f0f0f0;
+    border-radius: 12px;
+    padding: 8px;
+    margin-top: 10px;
+    text-align: center;
+    font-size: 12px;
+    color: #666;
+}
+
+.timer-progress {
+    width: 100%;
+    height: 4px;
+    background: #ddd;
+    border-radius: 2px;
+    margin-top: 5px;
+    overflow: hidden;
+}
+
+.timer-progress-bar {
+    height: 100%;
+    background: #4CAF50;
+    width: 0%;
+    transition: width 1s linear;
+}
+
+/* Контент с прокруткой */
+.content-scrollable {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 16px 16px;
+}
+
+/* Ресурсы города */
 .city-resources {
     display: flex;
     justify-content: space-between;
@@ -137,37 +191,11 @@ body {
     border-radius: 8px;
 }
 
-.income-timer {
-    background: #f0f0f0;
-    border-radius: 12px;
-    padding: 8px;
-    margin-top: 10px;
-    text-align: center;
-    font-size: 12px;
+.city-resource-item:hover {
+    background: rgba(0,0,0,0.05);
 }
 
-.timer-progress {
-    width: 100%;
-    height: 4px;
-    background: #ddd;
-    border-radius: 2px;
-    margin-top: 5px;
-    overflow: hidden;
-}
-
-.timer-progress-bar {
-    height: 100%;
-    background: #4CAF50;
-    width: 0%;
-    transition: width 1s linear;
-}
-
-.content-scrollable {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0 16px 16px;
-}
-
+/* Ратуша */
 .town-hall {
     background: linear-gradient(135deg, #f5e6d3, #e6d5b8);
     border: 3px solid #b5946e;
@@ -177,7 +205,13 @@ body {
     align-items: center;
     gap: 15px;
     cursor: pointer;
-    margin-top: 5px;
+    margin-bottom: 15px;
+    transition: all 0.2s;
+}
+
+.town-hall:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
 }
 
 .town-hall-icon {
@@ -192,39 +226,78 @@ body {
     font-size: 18px;
     font-weight: bold;
     color: #5d3a1a;
+    margin-bottom: 4px;
 }
 
 .town-hall-income {
     font-size: 14px;
     color: #4CAF50;
     font-weight: bold;
+    margin-bottom: 4px;
 }
 
+.town-hall-level {
+    font-size: 14px;
+    color: #8b6b42;
+}
+
+.town-hall-level-badge {
+    background: #b5946e;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* Секции построек */
 .buildings-section {
     background: #f8f8f8;
     border-radius: 12px;
+    margin-bottom: 15px;
+    overflow: hidden;
+}
+
+.buildings-section.collapsed .buildings-grid {
+    display: none;
+}
+
+.section-header {
     padding: 12px;
-    margin-top: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f0f0f0;
+    font-weight: bold;
+}
+
+.section-header:hover {
+    background: #e8e8e8;
+}
+
+.section-arrow {
+    font-size: 14px;
+    transition: transform 0.2s;
+}
+
+.buildings-section:not(.collapsed) .section-arrow {
+    transform: rotate(90deg);
 }
 
 .section-title {
     font-size: 14px;
-    font-weight: bold;
-    color: #666;
-    margin-bottom: 10px;
-    padding-bottom: 5px;
-    border-bottom: 1px solid #ddd;
-    display: flex;
-    align-items: center;
-    gap: 5px;
+    color: #333;
 }
 
 .buildings-grid {
+    padding: 12px;
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
+/* Карточка здания */
 .building-card {
     background: white;
     border: 2px solid #ddd;
@@ -294,11 +367,7 @@ body {
 .building-income {
     font-size: 12px;
     color: #4CAF50;
-}
-
-.building-next-income {
-    font-size: 11px;
-    color: #ff9800;
+    margin-bottom: 4px;
 }
 
 .building-upgrade-btn {
@@ -306,11 +375,12 @@ body {
     color: white;
     border: none;
     border-radius: 20px;
-    padding: 8px 12px;
+    padding: 6px 12px;
     font-size: 12px;
     font-weight: bold;
     cursor: pointer;
     margin-top: 5px;
+    width: fit-content;
 }
 
 .building-upgrade-btn.unavailable {
@@ -318,6 +388,7 @@ body {
     cursor: not-allowed;
 }
 
+/* Нижние вкладки */
 .tabs {
     display: flex;
     justify-content: space-around;
@@ -335,9 +406,10 @@ body {
     text-align: center;
     padding: 8px 4px;
     border-radius: 30px;
-    font-size: 13px;
+    font-size: 12px;
     color: #666;
     cursor: pointer;
+    transition: all 0.2s;
 }
 
 .tab.active {
@@ -346,70 +418,101 @@ body {
 }
 
 .tab-icon {
-    font-size: 18px;
+    font-size: 16px;
     display: block;
+    margin-bottom: 2px;
 }
 
-.empty-tab {
-    text-align: center;
-    padding: 40px 20px;
-    color: #999;
-    background: #f9f9f9;
-    border-radius: 12px;
-}
-
-.clan-section {
+/* Настройки */
+.settings-section {
     background: #f8f8f8;
     border-radius: 12px;
     padding: 15px;
 }
 
-.hidden {
-    display: none;
+.settings-section h3 {
+    margin-bottom: 15px;
+    color: #333;
 }
 
-input {
-    width: 100%;
+.settings-block {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.settings-block h4 {
+    margin-bottom: 10px;
+    color: #666;
+}
+
+.avatar-block {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.settings-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 3px solid #667eea;
+    object-fit: cover;
+}
+
+.name-change {
+    display: flex;
+    gap: 10px;
+}
+
+.name-change input {
+    flex: 1;
+}
+
+.user-id-block {
+    text-align: center;
     padding: 10px;
-    margin: 5px 0;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    color: #666;
+    font-size: 13px;
 }
 
-.toast {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0,0,0,0.8);
-    color: white;
-    padding: 10px 20px;
-    border-radius: 25px;
-    font-size: 14px;
-    display: none;
-    z-index: 2000;
+.user-id-label {
+    color: #999;
+    margin-right: 5px;
 }
 
-.login-overlay {
+.user-id-value {
+    font-weight: bold;
+    color: #333;
+}
+
+/* Модальные окна */
+.overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     background: rgba(0,0,0,0.8);
-    display: none;
+    display: flex;
     align-items: center;
     justify-content: center;
     z-index: 2000;
 }
 
-.login-box {
+.modal {
     background: white;
     border-radius: 20px;
     padding: 30px;
     width: 90%;
     max-width: 350px;
-    text-align: center;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.avatar-modal {
+    max-width: 400px;
 }
 
 .avatar-preview {
@@ -426,44 +529,23 @@ input {
     overflow: hidden;
 }
 
-.avatar-selector-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 3000;
-}
-
-.avatar-selector {
-    background: white;
-    border-radius: 20px;
-    padding: 20px;
-    width: 90%;
-    max-width: 400px;
-    max-height: 80vh;
-    overflow-y: auto;
-}
-
-.avatar-selector .avatar-grid {
+/* Сетка аватаров */
+.avatar-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
-    margin-bottom: 15px;
+    margin: 15px 0;
 }
 
-.avatar-selector .avatar-option {
+.avatar-option {
     text-align: center;
     padding: 10px;
     border: 2px solid #ddd;
     border-radius: 12px;
+    cursor: pointer;
 }
 
-.avatar-selector .avatar-option.selected {
+.avatar-option.selected {
     border-color: #4CAF50;
     background: #e8f5e8;
 }
@@ -472,5 +554,106 @@ input {
     width: 60px;
     height: 60px;
     border-radius: 50%;
+    margin-bottom: 5px;
     object-fit: cover;
+}
+
+.avatar-option-name {
+    font-weight: bold;
+    font-size: 13px;
+    margin-bottom: 5px;
+}
+
+.avatar-option-price {
+    font-size: 12px;
+    color: #ff9800;
+    margin-bottom: 5px;
+}
+
+/* Окно улучшения */
+.upgrade-info {
+    text-align: center;
+}
+
+.upgrade-info h3 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.upgrade-stats {
+    background: #f8f8f8;
+    border-radius: 12px;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.upgrade-stat {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.upgrade-cost {
+    background: #f0f0f0;
+    border-radius: 12px;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.upgrade-cost-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+/* Общие элементы */
+.btn {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn:hover {
+    background: #45a049;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-size: 14px;
+    display: none;
+    z-index: 3000;
+}
+
+.empty-message {
+    text-align: center;
+    padding: 20px;
+    color: #999;
+    background: white;
+    border-radius: 12px;
 }
