@@ -5,7 +5,6 @@ import json
 import hmac
 import hashlib
 from urllib.parse import parse_qs
-from datetime import datetime
 import time
 
 app = Flask(__name__)
@@ -90,7 +89,7 @@ BUILDINGS_CONFIG = {
         ]
     },
     "lumber": {
-        "name": "Лесопилка", "icon": "🪵", "section": "economic", "max_level": 5,
+        "name": "Лесопилка", "icon": "🪵", "section": "economic", "maxLevel": 5,
         "base_cost": {"gold": 40, "wood": 30, "stone": 0},
         "upgrade_costs": [
             {"gold": 50, "wood": 100, "stone": 0},
@@ -103,7 +102,7 @@ BUILDINGS_CONFIG = {
         ]
     },
     "quarry": {
-        "name": "Каменоломня", "icon": "⛰️", "section": "economic", "max_level": 5,
+        "name": "Каменоломня", "icon": "⛰️", "section": "economic", "maxLevel": 5,
         "base_cost": {"gold": 20, "wood": 80, "stone": 0},
         "upgrade_costs": [
             {"gold": 50, "wood": 150, "stone": 0},
@@ -303,7 +302,6 @@ def auth():
                 'config': BUILDINGS_CONFIG
             })
     except Exception as e:
-        print(f"❌ Auth error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/action', methods=['POST'])
@@ -352,7 +350,6 @@ def game_action():
                 buildings = []
         
         last_collection = player.get('last_collection', int(time.time() * 1000))
-        response_data = {'success': True}
         
         # ===== СБОР РЕСУРСОВ =====
         if action_type == 'collect':
@@ -392,15 +389,18 @@ def game_action():
                     'population_current': population_current, 'last_collection': last_collection
                 }).eq('id', player_id).execute()
             
-            response_data['state'] = {
-                'gold': gold, 'wood': wood, 'food': food, 'stone': stone,
-                'level': level, 'population_current': population_current, 'population_max': population_max,
-                'game_login': game_login, 'avatar': avatar, 'owned_avatars': owned_avatars,
-                'buildings': buildings, 'lastCollection': last_collection
-            }
+            return jsonify({
+                'success': True,
+                'state': {
+                    'gold': gold, 'wood': wood, 'food': food, 'stone': stone,
+                    'level': level, 'population_current': population_current, 'population_max': population_max,
+                    'game_login': game_login, 'avatar': avatar, 'owned_avatars': owned_avatars,
+                    'buildings': buildings, 'lastCollection': last_collection
+                }
+            })
         
         # ===== ПОСТРОЙКА =====
-        elif action_type == 'build':
+        if action_type == 'build':
             building_id = action_data.get('building_id')
             if building_id not in BUILDINGS_CONFIG:
                 return jsonify({'success': False, 'error': 'Unknown building'})
@@ -424,15 +424,18 @@ def game_action():
                 'buildings': json.dumps(buildings), 'population_max': population_max
             }).eq('id', player_id).execute()
             
-            response_data['state'] = {
-                'gold': gold, 'wood': wood, 'food': food, 'stone': stone,
-                'level': level, 'population_current': population_current, 'population_max': population_max,
-                'game_login': game_login, 'avatar': avatar, 'owned_avatars': owned_avatars,
-                'buildings': buildings, 'lastCollection': last_collection
-            }
+            return jsonify({
+                'success': True,
+                'state': {
+                    'gold': gold, 'wood': wood, 'food': food, 'stone': stone,
+                    'level': level, 'population_current': population_current, 'population_max': population_max,
+                    'game_login': game_login, 'avatar': avatar, 'owned_avatars': owned_avatars,
+                    'buildings': buildings, 'lastCollection': last_collection
+                }
+            })
         
         # ===== УЛУЧШЕНИЕ =====
-        elif action_type == 'upgrade':
+        if action_type == 'upgrade':
             building_id = action_data.get('building_id')
             building = next((b for b in buildings if b['id'] == building_id), None)
             if not building:
@@ -462,15 +465,18 @@ def game_action():
                 'buildings': json.dumps(buildings), 'population_max': population_max
             }).eq('id', player_id).execute()
             
-            response_data['state'] = {
-                'gold': gold, 'wood': wood, 'food': food, 'stone': stone,
-                'level': level, 'population_current': population_current, 'population_max': population_max,
-                'game_login': game_login, 'avatar': avatar, 'owned_avatars': owned_avatars,
-                'buildings': buildings, 'lastCollection': last_collection
-            }
+            return jsonify({
+                'success': True,
+                'state': {
+                    'gold': gold, 'wood': wood, 'food': food, 'stone': stone,
+                    'level': level, 'population_current': population_current, 'population_max': population_max,
+                    'game_login': game_login, 'avatar': avatar, 'owned_avatars': owned_avatars,
+                    'buildings': buildings, 'lastCollection': last_collection
+                }
+            })
         
         # ===== УЛУЧШЕНИЕ РАТУШИ =====
-        elif action_type == 'upgrade_level':
+        if action_type == 'upgrade_level':
             if level >= 5:
                 return jsonify({'success': False, 'error': 'Максимальный уровень'})
             
@@ -485,46 +491,39 @@ def game_action():
             
             supabase.table("players").update({'gold': gold, 'wood': wood, 'stone': stone, 'level': level}).eq('id', player_id).execute()
             
-            response_data['state'] = {
-                'gold': gold, 'wood': wood, 'food': food, 'stone': stone,
-                'level': level, 'population_current': population_current, 'population_max': population_max,
-                'game_login': game_login, 'avatar': avatar, 'owned_avatars': owned_avatars,
-                'buildings': buildings, 'lastCollection': last_collection
-            }
+            return jsonify({
+                'success': True,
+                'state': {
+                    'gold': gold, 'wood': wood, 'food': food, 'stone': stone,
+                    'level': level, 'population_current': population_current, 'population_max': population_max,
+                    'game_login': game_login, 'avatar': avatar, 'owned_avatars': owned_avatars,
+                    'buildings': buildings, 'lastCollection': last_collection
+                }
+            })
         
         # ===== СМЕНА ИМЕНИ (ПРИ РЕГИСТРАЦИИ) =====
-        elif action_type == 'set_login':
+        if action_type == 'set_login':
             new_login = action_data.get('game_login', '').strip()
-            
             if not new_login:
                 return jsonify({'success': False, 'error': 'Login cannot be empty'})
-            
             if len(new_login) > 12:
                 new_login = new_login[:12]
             
-            # Просто обновляем имя в БД
             supabase.table("players").update({'game_login': new_login}).eq('id', player_id).execute()
             
-            print(f"✅ Имя сохранено: {new_login}")
-            
-            # Возвращаем актуальные данные
-            response_data['state'] = {
-                'game_login': new_login,
-                'gold': gold,
-                'wood': wood,
-                'food': food,
-                'stone': stone,
-                'level': level,
-                'population_current': population_current,
-                'population_max': population_max,
-                'avatar': avatar,
-                'owned_avatars': owned_avatars,
-                'buildings': buildings,
-                'lastCollection': last_collection
-            }
+            return jsonify({
+                'success': True,
+                'state': {
+                    'game_login': new_login,
+                    'gold': gold, 'wood': wood, 'food': food, 'stone': stone,
+                    'level': level, 'population_current': population_current, 'population_max': population_max,
+                    'avatar': avatar, 'owned_avatars': owned_avatars,
+                    'buildings': buildings, 'lastCollection': last_collection
+                }
+            })
         
         # ===== ПЛАТНАЯ СМЕНА ИМЕНИ =====
-        elif action_type == 'change_name_paid':
+        if action_type == 'change_name_paid':
             new_name = action_data.get('game_login', '').strip()
             price = 5000
             if not new_name:
@@ -537,16 +536,19 @@ def game_action():
             gold -= price
             supabase.table("players").update({'game_login': new_name, 'gold': gold}).eq('id', player_id).execute()
             
-            response_data['state'] = {
-                'game_login': new_name,
-                'gold': gold, 'wood': wood, 'food': food, 'stone': stone,
-                'level': level, 'population_current': population_current, 'population_max': population_max,
-                'avatar': avatar, 'owned_avatars': owned_avatars,
-                'buildings': buildings, 'lastCollection': last_collection
-            }
+            return jsonify({
+                'success': True,
+                'state': {
+                    'game_login': new_name,
+                    'gold': gold, 'wood': wood, 'food': food, 'stone': stone,
+                    'level': level, 'population_current': population_current, 'population_max': population_max,
+                    'avatar': avatar, 'owned_avatars': owned_avatars,
+                    'buildings': buildings, 'lastCollection': last_collection
+                }
+            })
         
         # ===== ПОКУПКА АВАТАРА =====
-        elif action_type == 'buy_avatar':
+        if action_type == 'buy_avatar':
             new_avatar = action_data.get('avatar', '')
             price = action_data.get('price', 0)
             
@@ -562,36 +564,38 @@ def game_action():
                 'owned_avatars': json.dumps(owned_avatars)
             }).eq('id', player_id).execute()
             
-            response_data['state'] = {
-                'gold': gold, 'wood': wood, 'food': food, 'stone': stone,
-                'level': level, 'population_current': population_current, 'population_max': population_max,
-                'game_login': game_login, 'avatar': avatar, 'owned_avatars': owned_avatars,
-                'buildings': buildings, 'lastCollection': last_collection
-            }
+            return jsonify({
+                'success': True,
+                'state': {
+                    'gold': gold, 'wood': wood, 'food': food, 'stone': stone,
+                    'level': level, 'population_current': population_current, 'population_max': population_max,
+                    'game_login': game_login, 'avatar': avatar, 'owned_avatars': owned_avatars,
+                    'buildings': buildings, 'lastCollection': last_collection
+                }
+            })
         
         # ===== ВЫБОР АВАТАРА =====
-        elif action_type == 'select_avatar':
+        if action_type == 'select_avatar':
             new_avatar = action_data.get('avatar', '')
             if new_avatar not in owned_avatars:
                 return jsonify({'success': False, 'error': 'Avatar not owned'})
             
             supabase.table("players").update({'avatar': new_avatar}).eq('id', player_id).execute()
             
-            response_data['state'] = {
-                'avatar': new_avatar,
-                'gold': gold, 'wood': wood, 'food': food, 'stone': stone,
-                'level': level, 'population_current': population_current, 'population_max': population_max,
-                'game_login': game_login, 'owned_avatars': owned_avatars,
-                'buildings': buildings, 'lastCollection': last_collection
-            }
+            return jsonify({
+                'success': True,
+                'state': {
+                    'avatar': new_avatar,
+                    'gold': gold, 'wood': wood, 'food': food, 'stone': stone,
+                    'level': level, 'population_current': population_current, 'population_max': population_max,
+                    'game_login': game_login, 'owned_avatars': owned_avatars,
+                    'buildings': buildings, 'lastCollection': last_collection
+                }
+            })
         
-        else:
-            return jsonify({'success': False, 'error': 'Unknown action'})
-        
-        return jsonify(response_data)
+        return jsonify({'success': False, 'error': 'Unknown action'})
         
     except Exception as e:
-        print(f"❌ Action error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/clan/create', methods=['POST'])
@@ -609,9 +613,3 @@ def top_clans():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
-
-
-
-
-
-
