@@ -493,7 +493,7 @@ def game_action():
             }
         
         # ===== СМЕНА ИМЕНИ (ПРИ РЕГИСТРАЦИИ) =====
-              elif action_type == 'set_login':
+                 elif action_type == 'set_login':
             new_login = action_data.get('game_login', '').strip()
             
             if not new_login:
@@ -609,6 +609,7 @@ def top_clans():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
+
 
 
 
