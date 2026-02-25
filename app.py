@@ -44,7 +44,7 @@ BUILDINGS_CONFIG = {
         "icon": "🏘️",
         "section": "social",
         "max_level": 5,
-        "base_cost": {"gold": 50, "wood": 20, "stone": 0},  # 1 уровень уже построен
+        "base_cost": {"gold": 50, "wood": 20, "stone": 0},
         "upgrade_costs": [
             {"gold": 50, "wood": 100, "stone": 50},     # 1->2
             {"gold": 250, "wood": 300, "stone": 125},   # 2->3
@@ -58,7 +58,7 @@ BUILDINGS_CONFIG = {
         "icon": "🌾",
         "section": "economic",
         "max_level": 5,
-        "base_cost": {"gold": 30, "wood": 40, "stone": 0},  # 1 уровень уже построен
+        "base_cost": {"gold": 30, "wood": 40, "stone": 0},
         "upgrade_costs": [
             {"gold": 50, "wood": 100, "stone": 0},     # 1->2
             {"gold": 250, "wood": 300, "stone": 0},    # 2->3
@@ -78,7 +78,7 @@ BUILDINGS_CONFIG = {
         "icon": "🪵",
         "section": "economic",
         "max_level": 5,
-        "base_cost": {"gold": 40, "wood": 30, "stone": 0},  # 1 уровень уже построен
+        "base_cost": {"gold": 40, "wood": 30, "stone": 0},
         "upgrade_costs": [
             {"gold": 50, "wood": 100, "stone": 0},     # 1->2
             {"gold": 350, "wood": 200, "stone": 50},   # 2->3
@@ -98,7 +98,7 @@ BUILDINGS_CONFIG = {
         "icon": "⛰️",
         "section": "economic",
         "max_level": 5,
-        "base_cost": {"gold": 20, "wood": 80, "stone": 0},  # 1 уровень нужно строить
+        "base_cost": {"gold": 20, "wood": 80, "stone": 0},
         "upgrade_costs": [
             {"gold": 50, "wood": 150, "stone": 0},     # 1->2
             {"gold": 250, "wood": 350, "stone": 100},  # 2->3
@@ -203,7 +203,6 @@ def calculate_hourly_income_and_growth(buildings, town_hall_level, current_popul
     for b in buildings:
         building_id = b["id"]
         level = b["level"]
-        count = 1  # Всегда 1, здание одно
         
         config = BUILDINGS_CONFIG.get(building_id)
         if not config or level == 0 or not config.get("income"):
@@ -212,40 +211,38 @@ def calculate_hourly_income_and_growth(buildings, town_hall_level, current_popul
         level_income = config["income"][level - 1]
         for resource, value in level_income.items():
             if resource in income:
-                income[resource] += value  # Умножение на count убрано
+                income[resource] += value
     
-    # Расчет потребления еды
+    # Расчет роста населения
     food_production = income["food"]
-    food_consumption = current_population  # Каждый житель ест 1 еды
-    food_balance = food_production - food_consumption
+    food_needed = current_population
     
-    if food_balance >= 0:
-        # Еды хватает или есть избыток
-        income["food"] = food_balance  # Остаток еды
-        population_growth = 3
-        if current_population + population_growth <= max_population:
-            population_growth_result = population_growth
+    population_growth = 0
+    food_left = food_production - food_needed
+    
+    if food_left >= 0:
+        # Еды хватает - население растет
+        income["food"] = food_left
+        potential_growth = 3
+        new_population = current_population + potential_growth
+        if new_population <= max_population:
+            population_growth = potential_growth
         else:
-            population_growth_result = max_population - current_population
+            population_growth = max_population - current_population
     else:
-        # Еды не хватает, смотрим запасы
-        needed_food = abs(food_balance)  # Сколько еды не хватает
-        
-        if current_food >= needed_food:
+        # Еды не хватает - проверяем запасы
+        total_food_available = current_food + food_production
+        if total_food_available >= food_needed:
             # Можем покрыть из запасов
-            income["food"] = 0  # Вся произведенная еда ушла на прокорм
-            # Запасы уменьшатся позже при обновлении
-            population_growth_result = 3
-            if current_population + population_growth_result <= max_population:
-                population_growth_result = population_growth_result
-            else:
-                population_growth_result = max_population - current_population
+            income["food"] = total_food_available - food_needed
+            # Население не растет
+            population_growth = 0
         else:
-            # Запасов не хватает
+            # Катастрофа - еды нет совсем
             income["food"] = 0
-            population_growth_result = 0  # Рост останавливается
+            population_growth = 0
     
-    return income, population_growth_result
+    return income, population_growth
 
 @app.route('/')
 def index():
@@ -303,6 +300,7 @@ def auth():
                     'id': player.get('telegram_id'),
                     'username': player.get('username', ''),
                     'game_login': player.get('game_login', ''),
+                    'avatar': player.get('avatar', 'male_free'),
                     'gold': player.get('gold', 100),
                     'wood': player.get('wood', 50),
                     'food': player.get('food', 50),
@@ -317,9 +315,9 @@ def auth():
             })
         else:
             initial_buildings = [
-                {"id": "house", "count": 1, "level": 1},
-                {"id": "farm", "count": 1, "level": 1},
-                {"id": "lumber", "count": 1, "level": 1}
+                {"id": "house", "level": 1},
+                {"id": "farm", "level": 1},
+                {"id": "lumber", "level": 1}
             ]
             
             max_population = calculate_population_max(initial_buildings)
@@ -328,6 +326,7 @@ def auth():
                 'telegram_id': telegram_id,
                 'username': username,
                 'game_login': '',
+                'avatar': 'male_free',
                 'gold': 100,
                 'wood': 50,
                 'food': 50,
@@ -347,6 +346,7 @@ def auth():
                     'id': telegram_id,
                     'username': username,
                     'game_login': '',
+                    'avatar': 'male_free',
                     'gold': 100,
                     'wood': 50,
                     'food': 50,
@@ -399,6 +399,7 @@ def game_action():
         population_current = player.get('population_current', 10)
         population_max = player.get('population_max', 20)
         game_login = player.get('game_login', '')
+        avatar = player.get('avatar', 'male_free')
         
         buildings = []
         if player.get('buildings'):
@@ -439,7 +440,7 @@ def game_action():
                     total_population_gain += growth
                     
                     current_pop += growth
-                    current_food_stock += income["food"]  # Обновляем запасы еды
+                    current_food_stock += income["food"]
                 
                 gold += total_gold_gain
                 wood += total_wood_gain
@@ -469,6 +470,7 @@ def game_action():
                 'population_current': population_current,
                 'population_max': population_max,
                 'game_login': game_login,
+                'avatar': avatar,
                 'buildings': buildings,
                 'lastCollection': last_collection
             }
@@ -497,7 +499,6 @@ def game_action():
             
             buildings.append({
                 "id": building_id,
-                "count": 1,
                 "level": 1
             })
             
@@ -524,6 +525,7 @@ def game_action():
                 'population_current': population_current,
                 'population_max': population_max,
                 'game_login': game_login,
+                'avatar': avatar,
                 'buildings': buildings,
                 'lastCollection': last_collection
             }
@@ -584,6 +586,7 @@ def game_action():
                 'population_current': population_current,
                 'population_max': population_max,
                 'game_login': game_login,
+                'avatar': avatar,
                 'buildings': buildings,
                 'lastCollection': last_collection
             }
@@ -623,6 +626,7 @@ def game_action():
                 'population_current': population_current,
                 'population_max': population_max,
                 'game_login': game_login,
+                'avatar': avatar,
                 'buildings': buildings,
                 'lastCollection': last_collection
             }
@@ -649,6 +653,81 @@ def game_action():
                 'level': level,
                 'population_current': population_current,
                 'population_max': population_max,
+                'avatar': avatar,
+                'buildings': buildings,
+                'lastCollection': last_collection
+            }
+            
+        elif action_type == 'set_avatar':
+            # Смена аватара
+            new_avatar = action_data.get('avatar', '')
+            price = action_data.get('price', 0)
+            
+            # Проверяем, существует ли такой аватар
+            if new_avatar not in ['male_free', 'female_free', 'male_premium', 'female_premium']:
+                return jsonify({'success': False, 'error': 'Invalid avatar'})
+            
+            # Если аватар платный - проверяем и списываем монеты
+            if price > 0:
+                if gold < price:
+                    return jsonify({'success': False, 'error': 'Not enough gold'})
+                gold -= price
+            
+            # Обновляем аватар в БД
+            supabase.table("players") \
+                .update({'avatar': new_avatar}) \
+                .eq('id', player_id) \
+                .execute()
+            
+            print(f"✅ Аватар изменен на: {new_avatar}")
+            
+            response_data['state'] = {
+                'avatar': new_avatar,
+                'gold': gold,
+                'wood': wood,
+                'food': food,
+                'stone': stone,
+                'level': level,
+                'population_current': population_current,
+                'population_max': population_max,
+                'game_login': game_login,
+                'buildings': buildings,
+                'lastCollection': last_collection
+            }
+            
+        elif action_type == 'change_name_paid':
+            # Платная смена имени
+            new_name = action_data.get('game_login', '').strip()
+            price = 5000  # Фиксированная цена
+            
+            if not new_name:
+                return jsonify({'success': False, 'error': 'Name cannot be empty'})
+            
+            if len(new_name) > 12:
+                new_name = new_name[:12]
+            
+            if gold < price:
+                return jsonify({'success': False, 'error': 'Not enough gold'})
+            
+            gold -= price
+            
+            supabase.table("players") \
+                .update({'game_login': new_name}) \
+                .eq('id', player_id) \
+                .execute()
+            
+            print(f"✅ Имя изменено на: {new_name}")
+            
+            response_data['state'] = {
+                'game_login': new_name,
+                'gold': gold,
+                'wood': wood,
+                'food': food,
+                'stone': stone,
+                'level': level,
+                'population_current': population_current,
+                'population_max': population_max,
+                'avatar': avatar,
                 'buildings': buildings,
                 'lastCollection': last_collection
             }
@@ -681,4 +760,3 @@ def top_clans():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
-
