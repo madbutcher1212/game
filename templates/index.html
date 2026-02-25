@@ -21,9 +21,7 @@
 
     <!-- Окно улучшения здания -->
     <div id="upgradeOverlay" class="overlay" style="display: none;">
-        <div class="modal" id="upgradeModal">
-            <!-- сюда будет вставляться контент -->
-        </div>
+        <div class="modal" id="upgradeModal"></div>
     </div>
 
     <!-- Окно выбора аватара -->
@@ -36,7 +34,7 @@
     </div>
 
     <div class="game">
-        <!-- Верхний бар (фиксированный) -->
+        <!-- Верхний бар -->
         <div class="top-bar-fixed">
             <div class="top-bar">
                 <div class="avatar" id="avatar">
@@ -63,7 +61,6 @@
                     </div>
                 </div>
             </div>
-            
             <div class="income-timer" id="incomeTimer">
                 <div>⏳ Следующий сбор через: <span id="timerDisplay">59:59</span></div>
                 <div class="timer-progress">
@@ -72,12 +69,11 @@
             </div>
         </div>
         
-        <!-- Основной контент с прокруткой -->
+        <!-- Основной контент -->
         <div class="content-scrollable">
             <div class="tab-content">
-                <!-- Вкладка Город -->
+                <!-- Город -->
                 <div id="tabCity" class="tab-pane active">
-                    <!-- Ресурсы города -->
                     <div class="city-resources">
                         <div class="city-resource-item" onclick="showExactValue('wood')">
                             <span>🪵</span>
@@ -107,7 +103,7 @@
                         <div class="town-hall-level-badge" id="townHallLevelBadge">1</div>
                     </div>
                     
-                    <!-- Социальные постройки (свернуты) -->
+                    <!-- Социальные постройки -->
                     <div class="buildings-section collapsed" id="socialSection">
                         <div class="section-header" onclick="toggleSection('social')">
                             <span class="section-arrow">▶</span>
@@ -116,7 +112,7 @@
                         <div class="buildings-grid" id="socialBuildings"></div>
                     </div>
                     
-                    <!-- Экономические постройки (свернуты) -->
+                    <!-- Экономические постройки -->
                     <div class="buildings-section collapsed" id="economicSection">
                         <div class="section-header" onclick="toggleSection('economic')">
                             <span class="section-arrow">▶</span>
@@ -125,7 +121,7 @@
                         <div class="buildings-grid" id="economicBuildings"></div>
                     </div>
                     
-                    <!-- Военные постройки (свернуты) -->
+                    <!-- Военные постройки -->
                     <div class="buildings-section collapsed" id="militarySection">
                         <div class="section-header" onclick="toggleSection('military')">
                             <span class="section-arrow">▶</span>
@@ -137,17 +133,17 @@
                     </div>
                 </div>
                 
-                <!-- Вкладка Армия -->
+                <!-- Армия -->
                 <div id="tabArmy" class="tab-pane hidden">
                     <div class="empty-tab">⚔️ Армия в разработке</div>
                 </div>
                 
-                <!-- Вкладка Походы -->
+                <!-- Походы -->
                 <div id="tabCampaign" class="tab-pane hidden">
                     <div class="empty-tab">🗺️ Походы в разработке</div>
                 </div>
                 
-                <!-- Вкладка Кланы -->
+                <!-- Кланы -->
                 <div id="tabClans" class="tab-pane hidden">
                     <div class="clan-section">
                         <h3>👥 Управление кланом</h3>
@@ -159,12 +155,11 @@
                     </div>
                 </div>
                 
-                <!-- Вкладка Настройки -->
+                <!-- Настройки -->
                 <div id="tabSettings" class="tab-pane hidden">
                     <div class="settings-section">
                         <h3>⚙️ Настройки</h3>
                         
-                        <!-- Блок аватара -->
                         <div class="settings-block">
                             <h4>🖼️ Аватар</h4>
                             <div class="avatar-block">
@@ -176,7 +171,6 @@
                             </div>
                         </div>
                         
-                        <!-- Блок смены имени -->
                         <div class="settings-block">
                             <h4>📝 Сменить имя</h4>
                             <div class="name-change">
@@ -185,7 +179,6 @@
                             </div>
                         </div>
                         
-                        <!-- ID игрока -->
                         <div class="user-id-block">
                             <span class="user-id-label">ID:</span>
                             <span class="user-id-value" id="userTelegramId"></span>
