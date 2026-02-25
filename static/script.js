@@ -4,7 +4,6 @@ const tg = window.Telegram.WebApp;
 tg.expand();
 tg.ready();
 
-// Конфиг аватарок
 const AVATARS = {
     'male_free': {
         name: 'Мужской',
@@ -28,7 +27,6 @@ const AVATARS = {
     }
 };
 
-// Данные пользователя
 let userData = {
     id: null,
     username: '',
@@ -45,15 +43,14 @@ let userData = {
     lastCollection: Date.now()
 };
 
-// Постройки
 let buildings = [
     { id: 'house', level: 1 },
     { id: 'farm', level: 1 },
     { id: 'lumber', level: 1 }
 ];
 
-// Константы
 const TOWN_HALL_INCOME = {1:5, 2:10, 3:20, 4:45, 5:100};
+
 const TOWN_HALL_UPGRADE_COST = {
     2: {gold:50, wood:100, stone:0},
     3: {gold:500, wood:400, stone:0},
@@ -61,7 +58,6 @@ const TOWN_HALL_UPGRADE_COST = {
     5: {gold:10000, wood:6000, stone:2500}
 };
 
-// Конфиг зданий
 const BUILDINGS_CONFIG = {
     'house': {
         name: 'Жилой район', icon: '🏘️', section: 'social', maxLevel: 5,
@@ -72,8 +68,7 @@ const BUILDINGS_CONFIG = {
             {gold:1500, wood:1000, stone:400},
             {gold:7200, wood:5300, stone:2450}
         ],
-        populationBonus: [20,20,40,100,250],
-        income: [{},{},{},{},{}]
+        populationBonus: [20,20,40,100,250]
     },
     'tavern': {
         name: 'Корчма', icon: '🍺', section: 'social', maxLevel: 5,
@@ -156,14 +151,12 @@ const COLLECTION_INTERVAL = 60 * 60 * 1000;
 let currentTab = 'city';
 let selectedBuildingForUpgrade = null;
 
-// Форматирование чисел
 function formatNumber(num) {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'м';
     if (num >= 1000) return (num / 1000).toFixed(1) + 'к';
     return num.toString();
 }
 
-// Уведомления
 function showToast(message) {
     const toast = document.getElementById('toast');
     toast.textContent = message;
@@ -171,7 +164,6 @@ function showToast(message) {
     setTimeout(() => toast.style.display = 'none', 2000);
 }
 
-// Показать точное значение ресурса
 function showExactValue(resource) {
     const values = {
         gold: userData.gold,
@@ -184,7 +176,6 @@ function showExactValue(resource) {
     showToast(`${names[resource]}: ${values[resource]}`);
 }
 
-// Обновление аватара
 function updateAvatar() {
     const img = document.getElementById('avatarImg');
     const placeholder = document.getElementById('avatarPlaceholder');
@@ -206,7 +197,6 @@ function updateAvatar() {
     if (nameEl) nameEl.textContent = avatar?.name || 'Мужской';
 }
 
-// Обновление информации о пользователе
 function updateUserInfo() {
     let name = userData.game_login || 'Игрок';
     if (name.length > 12) name = name.substring(0, 12);
@@ -217,12 +207,10 @@ function updateUserInfo() {
     updateAvatar();
 }
 
-// Получить уровень здания
 function getBuildingLevel(id) {
     return buildings.find(b => b.id === id)?.level || 0;
 }
 
-// Рассчитать доход в час
 function calculateHourlyIncome() {
     let income = {
         gold: TOWN_HALL_INCOME[userData.level] || 0,
@@ -245,7 +233,6 @@ function calculateHourlyIncome() {
     return income;
 }
 
-// Обновление отображения ресурсов
 function updateResourcesDisplay() {
     const income = calculateHourlyIncome();
     
@@ -275,7 +262,6 @@ function updateResourcesDisplay() {
     document.getElementById('populationGrowth').textContent = totalGrowth > 0 ? `+${totalGrowth}` : '⚠️';
 }
 
-// Обновление отображения ратуши
 function updateTownHallDisplay() {
     const income = TOWN_HALL_INCOME[userData.level] || 0;
     document.getElementById('townHallIncome').textContent = `+${income} 🪙/ч`;
@@ -283,7 +269,6 @@ function updateTownHallDisplay() {
     document.getElementById('townHallLevelBadge').textContent = userData.level;
 }
 
-// Обновление таймера
 function updateTimer() {
     const now = Date.now();
     const timePassed = now - userData.lastCollection;
@@ -302,14 +287,12 @@ function updateTimer() {
     }
 }
 
-// Проверка автосбора
 async function checkAutoCollection() {
     if (Date.now() - userData.lastCollection >= COLLECTION_INTERVAL) {
         await performAction('collect', {});
     }
 }
 
-// Проверка возможности улучшения
 function canUpgrade(buildingId, currentLevel) {
     if (buildingId === 'townhall') {
         if (userData.level >= 5) return false;
@@ -333,7 +316,6 @@ function canUpgrade(buildingId, currentLevel) {
     return userData.gold >= cost.gold && userData.wood >= cost.wood && userData.stone >= cost.stone;
 }
 
-// Генерация карточки здания
 function generateBuildingCardHTML(id) {
     const config = BUILDINGS_CONFIG[id];
     if (!config) return '';
@@ -394,7 +376,6 @@ function generateBuildingCardHTML(id) {
     `;
 }
 
-// Показать модальное окно улучшения
 function showUpgradeModal(buildingId) {
     const config = BUILDINGS_CONFIG[buildingId];
     const level = getBuildingLevel(buildingId);
@@ -455,13 +436,11 @@ function showUpgradeModal(buildingId) {
     selectedBuildingForUpgrade = buildingId;
 }
 
-// Закрыть окно улучшения
 function closeUpgradeModal() {
     document.getElementById('upgradeOverlay').style.display = 'none';
     selectedBuildingForUpgrade = null;
 }
 
-// Подтвердить улучшение
 async function confirmUpgrade(buildingId) {
     closeUpgradeModal();
     const level = getBuildingLevel(buildingId);
@@ -472,13 +451,11 @@ async function confirmUpgrade(buildingId) {
     }
 }
 
-// Переключение секций
 function toggleSection(section) {
     const el = document.getElementById(section + 'Section');
     el.classList.toggle('collapsed');
 }
 
-// Обновление UI города
 function updateCityUI() {
     updateResourcesDisplay();
     updateTownHallDisplay();
@@ -494,7 +471,6 @@ function updateCityUI() {
         generateBuildingCardHTML('quarry');
 }
 
-// Открыть селектор аватаров
 function openAvatarSelector() {
     const grid = document.getElementById('avatarGrid');
     grid.innerHTML = '';
@@ -524,12 +500,10 @@ function openAvatarSelector() {
     document.getElementById('avatarOverlay').style.display = 'flex';
 }
 
-// Закрыть селектор аватаров
 function closeAvatarSelector() {
     document.getElementById('avatarOverlay').style.display = 'none';
 }
 
-// Купить аватар
 async function buyAvatar(key) {
     const a = AVATARS[key];
     if (!a) return;
@@ -541,7 +515,6 @@ async function buyAvatar(key) {
     closeAvatarSelector();
 }
 
-// Выбрать аватар
 async function selectAvatar(key) {
     if (!userData.owned_avatars.includes(key)) {
         showToast('❌ Сначала купите этот аватар');
@@ -551,7 +524,6 @@ async function selectAvatar(key) {
     closeAvatarSelector();
 }
 
-// Улучшить ратушу
 async function upgradeTownHall() {
     if (userData.level >= 5) {
         showToast('🏛️ Максимальный уровень');
@@ -560,7 +532,6 @@ async function upgradeTownHall() {
     showUpgradeModal('townhall');
 }
 
-// Построить здание
 async function buildBuilding(id) {
     if (buildings.find(b => b.id === id)) {
         showToast('❌ Здание уже построено');
@@ -569,7 +540,6 @@ async function buildBuilding(id) {
     await performAction('build', { building_id: id });
 }
 
-// Улучшить здание
 async function upgradeBuilding(id) {
     const b = buildings.find(b => b.id === id);
     if (!b) {
@@ -583,7 +553,6 @@ async function upgradeBuilding(id) {
     await performAction('upgrade', { building_id: id });
 }
 
-// Выполнить действие
 async function performAction(action, data) {
     try {
         const res = await fetch(`${API_URL}/api/action`, {
@@ -598,7 +567,6 @@ async function performAction(action, data) {
             if (result.state.buildings) buildings = result.state.buildings;
             updateUserInfo();
             updateCityUI();
-            updateSettingsUI?.();
             
             const messages = {
                 build: '✅ Построено!',
@@ -619,7 +587,6 @@ async function performAction(action, data) {
     }
 }
 
-// Авторизация
 async function login() {
     try {
         const res = await fetch(`${API_URL}/api/auth`, {
@@ -637,6 +604,8 @@ async function login() {
             
             if (!userData.game_login || userData.game_login === '' || userData.game_login === 'EMPTY') {
                 document.getElementById('loginOverlay').style.display = 'flex';
+            } else {
+                document.getElementById('loginOverlay').style.display = 'none';
             }
         }
     } catch {
@@ -644,7 +613,6 @@ async function login() {
     }
 }
 
-// Сохранить логин при первом входе
 async function saveGameLogin() {
     const input = document.getElementById('newLogin');
     let name = input.value.trim();
@@ -660,7 +628,6 @@ async function saveGameLogin() {
     }
 }
 
-// Платная смена имени
 async function changeNamePaid() {
     const input = document.getElementById('newNameInput');
     let name = input.value.trim();
@@ -676,7 +643,6 @@ async function changeNamePaid() {
     await performAction('change_name_paid', { game_login: name });
 }
 
-// Переключение вкладок
 function switchTab(tab) {
     currentTab = tab;
     document.querySelectorAll('.tab').forEach(t => 
@@ -690,8 +656,8 @@ function switchTab(tab) {
     }
 }
 
-// Кланы (заглушки)
 async function createClan() { showToast('🚧 В разработке'); }
+
 async function showTopClans() {
     try {
         const res = await fetch(`${API_URL}/api/clans/top`);
@@ -710,7 +676,6 @@ async function showTopClans() {
     }
 }
 
-// Инициализация
 document.addEventListener('DOMContentLoaded', () => {
     login();
     
