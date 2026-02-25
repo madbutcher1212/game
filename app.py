@@ -502,8 +502,8 @@ def game_action():
             
             supabase.table("players").update({'game_login': new_login}).eq('id', player_id).execute()
             
-                        response_data['state'] = {
-                'game_login': new_login,  # ← здесь должно быть new_login, а не game_login
+            response_data['state'] = {
+                'game_login': new_login,
                 'gold': gold,
                 'wood': wood,
                 'food': food,
@@ -603,4 +603,5 @@ def top_clans():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
+
 
