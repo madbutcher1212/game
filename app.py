@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, render_template
+from flask_cors import CORS
 from supabase import create_client, Client
 import os
 import json
@@ -8,6 +9,7 @@ from urllib.parse import parse_qs
 import time
 
 app = Flask(__name__)
+CORS(app)  # 👈 ЭТО РЕШАЕТ ПРОБЛЕМУ
 
 # ========== НАСТРОЙКИ ==========
 SUPABASE_URL = "https://xevwktdwyioyantuqntb.supabase.co"
@@ -89,7 +91,7 @@ BUILDINGS_CONFIG = {
         ]
     },
     "lumber": {
-        "name": "Лесопилка", "icon": "🪵", "section": "economic", "maxLevel": 5,
+        "name": "Лесопилка", "icon": "🪵", "section": "economic", "max_level": 5,
         "base_cost": {"gold": 40, "wood": 30, "stone": 0},
         "upgrade_costs": [
             {"gold": 50, "wood": 100, "stone": 0},
@@ -102,7 +104,7 @@ BUILDINGS_CONFIG = {
         ]
     },
     "quarry": {
-        "name": "Каменоломня", "icon": "⛰️", "section": "economic", "maxLevel": 5,
+        "name": "Каменоломня", "icon": "⛰️", "section": "economic", "max_level": 5,
         "base_cost": {"gold": 20, "wood": 80, "stone": 0},
         "upgrade_costs": [
             {"gold": 50, "wood": 150, "stone": 0},
