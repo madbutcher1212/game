@@ -737,11 +737,12 @@ async function login() {
             updateUserInfo();
             updateCityUI();
             
-            if (!userData.game_login || userData.game_login === '') {
-                document.getElementById('loginOverlay').style.display = 'flex';
-            } else {
-                document.getElementById('loginOverlay').style.display = 'none';
-            }
+           // Проверка на показ окна
+if (!userData.game_login || userData.game_login === '' || userData.game_login === 'EMPTY') {
+    document.getElementById('loginOverlay').style.display = 'flex';
+} else {
+    document.getElementById('loginOverlay').style.display = 'none';
+}
         }
     } catch (error) {
         showToast('⚠️ Ошибка загрузки');
