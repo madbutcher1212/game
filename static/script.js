@@ -8,26 +8,22 @@ const AVATARS = {
     'male_free': {
         name: 'Мужской',
         url: 'https://raw.githubusercontent.com/madbutcher1212/game/main/static/avatars/male_free.png',
-        price: 0,
-        category: 'free'
+        price: 0
     },
     'female_free': {
         name: 'Женский',
         url: 'https://raw.githubusercontent.com/madbutcher1212/game/main/static/avatars/female_free.png',
-        price: 0,
-        category: 'free'
+        price: 0
     },
     'male_premium': {
         name: 'Лорд',
         url: 'https://raw.githubusercontent.com/madbutcher1212/game/main/static/avatars/male_premium.png',
-        price: 25000,
-        category: 'premium'
+        price: 25000
     },
     'female_premium': {
         name: 'Леди',
         url: 'https://raw.githubusercontent.com/madbutcher1212/game/main/static/avatars/female_premium.png',
-        price: 25000,
-        category: 'premium'
+        price: 25000
     }
 };
 
@@ -120,11 +116,7 @@ const BUILDINGS_CONFIG = {
             {gold:5200,wood:6300,stone:2450}
         ],
         income: [
-            {food:10},
-            {food:25},
-            {food:60},
-            {food:120},
-            {food:260}
+            {food:10},{food:25},{food:60},{food:120},{food:260}
         ]
     },
     'lumber': {
@@ -137,11 +129,7 @@ const BUILDINGS_CONFIG = {
             {gold:7000,wood:4500,stone:3500}
         ],
         income: [
-            {wood:10},
-            {wood:20},
-            {wood:40},
-            {wood:100},
-            {wood:200}
+            {wood:10},{wood:20},{wood:40},{wood:100},{wood:200}
         ]
     },
     'quarry': {
@@ -154,54 +142,18 @@ const BUILDINGS_CONFIG = {
             {gold:6200,wood:7300,stone:1450}
         ],
         income: [
-            {stone:5},
-            {stone:15},
-            {stone:35},
-            {stone:80},
-            {stone:160}
+            {stone:5},{stone:15},{stone:35},{stone:80},{stone:160}
         ]
     }
 };
 
-let currentTab = 'city';
 const COLLECTION_INTERVAL = 60 * 60 * 1000;
+let currentTab = 'city';
 
 function formatNumber(num) {
-    if (num >= 1000000) {
-        return (num / 1000000).toFixed(1) + 'м';
-    }
-    if (num >= 1000) {
-        return (num / 1000).toFixed(1) + 'к';
-    }
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'м';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'к';
     return num.toString();
-}
-
-function showExactValue(resource) {
-    let value, name;
-    switch(resource) {
-        case 'gold':
-            value = userData.gold;
-            name = 'Золото';
-            break;
-        case 'wood':
-            value = userData.wood;
-            name = 'Древесина';
-            break;
-        case 'stone':
-            value = userData.stone;
-            name = 'Камень';
-            break;
-        case 'food':
-            value = userData.food;
-            name = 'Еда';
-            break;
-        case 'population':
-            value = `${userData.population_current}/${userData.population_max}`;
-            name = 'Население';
-            showToast(`${name}: ${value}`);
-            return;
-    }
-    showToast(`${name}: ${value}`);
 }
 
 function showToast(message) {
@@ -211,79 +163,65 @@ function showToast(message) {
     setTimeout(() => toast.style.display = 'none', 2000);
 }
 
+function showExactValue(resource) {
+    const values = {
+        gold: userData.gold,
+        wood: userData.wood,
+        stone: userData.stone,
+        food: userData.food,
+        population: `${userData.population_current}/${userData.population_max}`
+    };
+    const names = {gold:'Золото', wood:'Древесина', stone:'Камень', food:'Еда', population:'Население'};
+    showToast(`${names[resource]}: ${values[resource]}`);
+}
+
 function updateAvatar() {
-    const avatarImg = document.getElementById('avatarImg');
-    const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+    const img = document.getElementById('avatarImg');
+    const placeholder = document.getElementById('avatarPlaceholder');
+    const avatar = AVATARS[userData.avatar];
     
-    if (userData.avatar && AVATARS[userData.avatar] && AVATARS[userData.avatar].url) {
-        avatarImg.src = AVATARS[userData.avatar].url;
-        avatarImg.style.display = 'block';
-        avatarPlaceholder.style.display = 'none';
+    if (avatar && avatar.url) {
+        img.src = avatar.url;
+        img.style.display = 'block';
+        placeholder.style.display = 'none';
     } else {
-        const letter = userData.game_login ? userData.game_login.charAt(0).toUpperCase() : '👤';
-        avatarPlaceholder.textContent = letter;
-        avatarPlaceholder.style.display = 'block';
-        avatarImg.style.display = 'none';
+        placeholder.textContent = userData.game_login?.charAt(0).toUpperCase() || '👤';
+        placeholder.style.display = 'block';
+        img.style.display = 'none';
     }
 }
 
 function updateUserInfo() {
-    let displayName = userData.game_login || 'Игрок';
-    if (displayName.length > 12) displayName = displayName.substring(0,12);
-    document.getElementById('userName').textContent = displayName;
+    let name = userData.game_login || 'Игрок';
+    if (name.length > 12) name = name.substring(0,12);
+    document.getElementById('userName').textContent = name;
     document.getElementById('userLogin').textContent = '@' + (userData.username || 'username');
     document.getElementById('levelBadge').textContent = userData.level;
     document.getElementById('userTelegramId').textContent = userData.id || '—';
     updateAvatar();
 }
 
-function getBuildingLevel(buildingId) {
-    const b = buildings.find(b => b.id === buildingId);
-    return b ? b.level : 0;
-}
-
-function getBuildingIncome(buildingId, level) {
-    if (buildingId === 'townhall') return {gold: TOWN_HALL_INCOME[level] || 0};
-    const config = BUILDINGS_CONFIG[buildingId];
-    if (!config || level === 0 || !config.income) return {};
-    return config.income[level-1] || {};
-}
-
-function getUpgradeCost(buildingId, currentLevel) {
-    if (buildingId === 'townhall') {
-        return TOWN_HALL_UPGRADE_COST[currentLevel+1] || {gold:0,wood:0,stone:0};
-    }
-    const config = BUILDINGS_CONFIG[buildingId];
-    if (!config || currentLevel >= config.maxLevel) return {gold:0,wood:0,stone:0};
-    return config.upgradeCosts[currentLevel-1];
-}
-
-function isTownHallLevelEnough(buildingId, targetLevel) {
-    if (buildingId === 'townhall') return true;
-    const config = BUILDINGS_CONFIG[buildingId];
-    if (!config || !config.requiredTownHall) return true;
-    return userData.level >= config.requiredTownHall[targetLevel - 1];
+function getBuildingLevel(id) {
+    return buildings.find(b => b.id === id)?.level || 0;
 }
 
 function calculateHourlyIncome() {
     let income = {
         gold: TOWN_HALL_INCOME[userData.level] || 0,
-        wood: 0,
-        food: 0,
-        stone: 0,
-        populationGrowth: 0
+        wood: 0, food: 0, stone: 0, populationGrowth: 0
     };
     
     buildings.forEach(b => {
         const config = BUILDINGS_CONFIG[b.id];
-        if (!config || !config.income) return;
-        
-        const levelIncome = config.income[b.level - 1];
-        income.gold += levelIncome.gold || 0;
-        income.wood += levelIncome.wood || 0;
-        income.food += levelIncome.food || 0;
-        income.stone += levelIncome.stone || 0;
-        income.populationGrowth += levelIncome.populationGrowth || 0;
+        if (!config?.income) return;
+        const inc = config.income[b.level - 1];
+        if (inc) {
+            income.gold += inc.gold || 0;
+            income.wood += inc.wood || 0;
+            income.food += inc.food || 0;
+            income.stone += inc.stone || 0;
+            income.populationGrowth += inc.populationGrowth || 0;
+        }
     });
     
     return income;
@@ -301,125 +239,35 @@ function updateResourcesDisplay() {
     document.getElementById('stoneDisplay').textContent = formatNumber(userData.stone);
     document.getElementById('stoneIncome').textContent = `+${formatNumber(income.stone)}/ч`;
     
-    const foodProduction = income.food;
-    const foodConsumption = userData.population_current;
-    const foodBalance = foodProduction - foodConsumption;
+    const foodProd = income.food;
+    const foodCons = userData.population_current;
+    const foodBal = foodProd - foodCons;
     
     document.getElementById('foodDisplay').textContent = formatNumber(userData.food);
-    
-    if (foodBalance > 0) {
-        document.getElementById('foodIncome').textContent = `+${formatNumber(foodBalance)}/ч`;
-        document.getElementById('foodIncome').className = 'resource-income';
-    } else if (foodBalance < 0) {
-        document.getElementById('foodIncome').textContent = `${formatNumber(foodBalance)}/ч`;
-        document.getElementById('foodIncome').className = 'resource-income-negative';
-    } else {
-        document.getElementById('foodIncome').textContent = `0/ч`;
-        document.getElementById('foodIncome').className = 'resource-income';
-    }
+    document.getElementById('foodIncome').textContent = 
+        foodBal > 0 ? `+${formatNumber(foodBal)}/ч` : foodBal < 0 ? `${formatNumber(foodBal)}/ч` : '0/ч';
+    document.getElementById('foodIncome').className = foodBal < 0 ? 'resource-income-negative' : 'resource-income';
     
     document.getElementById('populationDisplay').textContent = 
         `${userData.population_current}/${userData.population_max}`;
     
-    const canGrow = userData.food > 0 || foodProduction >= foodConsumption;
+    const canGrow = userData.food > 0 || foodProd >= foodCons;
     const totalGrowth = canGrow ? 3 + income.populationGrowth : 0;
     document.getElementById('populationGrowth').textContent = totalGrowth > 0 ? `+${totalGrowth}/ч` : '⚠️';
 }
 
 function updateTownHallDisplay() {
-    const currentIncome = TOWN_HALL_INCOME[userData.level] || 0;
-    document.getElementById('townHallIncome').textContent = `+${currentIncome} 🪙/ч`;
+    const income = TOWN_HALL_INCOME[userData.level] || 0;
+    document.getElementById('townHallIncome').textContent = `+${income} 🪙/ч`;
     document.getElementById('townHallLevel').textContent = userData.level;
     document.getElementById('townHallLevelBadge').textContent = userData.level;
     
     if (userData.level < 5) {
-        const cost = getUpgradeCost('townhall', userData.level);
+        const cost = TOWN_HALL_UPGRADE_COST[userData.level + 1];
         document.getElementById('townHallNext').innerHTML = 
-            `⬆️ Улучшить (🪙${cost.gold} 🪵${cost.wood}${cost.stone>0 ? ` ⛰️${cost.stone}`:''})`;
+            `⬆️ Улучшить (🪙${cost.gold} 🪵${cost.wood}${cost.stone ? ` ⛰️${cost.stone}` : ''})`;
     } else {
         document.getElementById('townHallNext').textContent = '🏆 Макс. уровень';
-    }
-}
-
-function openAvatarSelector() {
-    const overlay = document.createElement('div');
-    overlay.className = 'avatar-selector-overlay';
-    overlay.innerHTML = `
-        <div class="avatar-selector">
-            <h3>Выберите аватар</h3>
-            <div class="avatar-grid" id="selectorAvatarGrid"></div>
-            <button class="building-upgrade-btn" onclick="this.closest('.avatar-selector-overlay').remove()">Закрыть</button>
-        </div>
-    `;
-    
-    const grid = overlay.querySelector('#selectorAvatarGrid');
-    Object.keys(AVATARS).forEach(key => {
-        const a = AVATARS[key];
-        const isOwned = userData.owned_avatars.includes(key);
-        const isSelected = userData.avatar === key;
-        
-        let buttonHtml = '';
-        if (!isOwned) {
-            buttonHtml = `<button class="building-upgrade-btn" onclick="buyAvatar('${key}')">Купить за ${a.price} 🪙</button>`;
-        } else if (!isSelected) {
-            buttonHtml = `<button class="building-upgrade-btn" onclick="selectAvatar('${key}')">Выбрать</button>`;
-        } else {
-            buttonHtml = `<button class="building-upgrade-btn" disabled style="background: #4CAF50;">Выбран</button>`;
-        }
-        
-        const avatarDiv = document.createElement('div');
-        avatarDiv.className = `avatar-option ${isSelected ? 'selected' : ''}`;
-        avatarDiv.innerHTML = `
-            <img src="${a.url}" class="avatar-option-img">
-            <div class="avatar-option-name">${a.name}</div>
-            ${!isOwned ? `<div class="avatar-option-price">${a.price} 🪙</div>` : ''}
-            ${buttonHtml}
-        `;
-        grid.appendChild(avatarDiv);
-    });
-    
-    document.body.appendChild(overlay);
-}
-
-async function buyAvatar(avatarKey) {
-    const avatar = AVATARS[avatarKey];
-    if (!avatar) return;
-    
-    if (userData.gold < avatar.price) {
-        showToast('❌ Не хватает монет');
-        return;
-    }
-    
-    await performAction('buy_avatar', { avatar: avatarKey, price: avatar.price });
-}
-
-async function selectAvatar(avatarKey) {
-    if (!userData.owned_avatars.includes(avatarKey)) {
-        showToast('❌ Сначала купите этот аватар');
-        return;
-    }
-    
-    if (userData.avatar === avatarKey) {
-        showToast('✅ Это уже ваш аватар');
-        return;
-    }
-    
-    await performAction('select_avatar', { avatar: avatarKey });
-}
-
-function updateSettingsUI() {
-    const avatarSection = document.getElementById('avatarSection');
-    if (avatarSection) {
-        avatarSection.innerHTML = `
-            <h4 style="margin-bottom: 10px;">🖼️ Аватар</h4>
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <img src="${AVATARS[userData.avatar].url}" style="width: 60px; height: 60px; border-radius: 50%; border: 3px solid #667eea; object-fit: cover;">
-                <div>
-                    <div style="font-weight: bold;">${AVATARS[userData.avatar].name}</div>
-                    <button class="building-upgrade-btn" onclick="openAvatarSelector()" style="margin-top: 5px;">Сменить аватар</button>
-                </div>
-            </div>
-        `;
     }
 }
 
@@ -432,18 +280,17 @@ function updateTimer() {
         document.getElementById('timerDisplay').textContent = 'Готово!';
         document.getElementById('timerProgress').style.width = '100%';
     } else {
-        const minutes = Math.floor(timeLeft/60000);
-        const seconds = Math.floor((timeLeft%60000)/1000);
+        const minutes = Math.floor(timeLeft / 60000);
+        const seconds = Math.floor((timeLeft % 60000) / 1000);
         document.getElementById('timerDisplay').textContent = 
             `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
-        const progress = ((COLLECTION_INTERVAL-timeLeft)/COLLECTION_INTERVAL)*100;
-        document.getElementById('timerProgress').style.width = `${progress}%`;
+        document.getElementById('timerProgress').style.width = 
+            `${(COLLECTION_INTERVAL - timeLeft) / COLLECTION_INTERVAL * 100}%`;
     }
 }
 
 async function checkAutoCollection() {
-    const now = Date.now();
-    if (now - userData.lastCollection >= COLLECTION_INTERVAL) {
+    if (Date.now() - userData.lastCollection >= COLLECTION_INTERVAL) {
         await performAction('collect', {});
     }
 }
@@ -451,7 +298,7 @@ async function checkAutoCollection() {
 function canUpgrade(buildingId, currentLevel) {
     if (buildingId === 'townhall') {
         if (userData.level >= 5) return false;
-        const cost = getUpgradeCost(buildingId, currentLevel);
+        const cost = TOWN_HALL_UPGRADE_COST[userData.level + 1];
         return userData.gold >= cost.gold && userData.wood >= cost.wood && userData.stone >= cost.stone;
     }
     
@@ -460,41 +307,33 @@ function canUpgrade(buildingId, currentLevel) {
     
     if (currentLevel === 0) {
         const cost = config.baseCost;
-        return isTownHallLevelEnough(buildingId, 1) && 
-               userData.gold >= cost.gold && 
-               userData.wood >= cost.wood && 
-               userData.stone >= cost.stone;
+        return userData.level >= (config.requiredTownHall?.[0] || 1) &&
+               userData.gold >= cost.gold && userData.wood >= cost.wood && userData.stone >= cost.stone;
     }
     
     if (currentLevel >= config.maxLevel) return false;
-    if (!isTownHallLevelEnough(buildingId, currentLevel + 1)) return false;
+    if (userData.level < (config.requiredTownHall?.[currentLevel] || currentLevel + 1)) return false;
     
-    const cost = getUpgradeCost(buildingId, currentLevel);
-    return userData.gold >= cost.gold && 
-           userData.wood >= cost.wood && 
-           userData.stone >= cost.stone;
+    const cost = config.upgradeCosts[currentLevel - 1];
+    return userData.gold >= cost.gold && userData.wood >= cost.wood && userData.stone >= cost.stone;
 }
 
-function generateBuildingCardHTML(buildingId) {
-    const config = BUILDINGS_CONFIG[buildingId];
+function generateBuildingCardHTML(id) {
+    const config = BUILDINGS_CONFIG[id];
     if (!config) return '';
     
-    const level = getBuildingLevel(buildingId);
+    const level = getBuildingLevel(id);
+    let statusClass = '', statusBadge = '', bonusText = '';
     
-    let statusClass = '';
-    let statusBadge = '';
-    let bonusText = '';
-    
-    if (buildingId === 'house' && level > 0) {
-        const totalBonus = config.populationBonus.slice(0, level).reduce((a,b)=>a+b,0);
-        bonusText = `<div class="building-income">👥 +${totalBonus} лимит</div>`;
+    if (id === 'house' && level > 0) {
+        const total = config.populationBonus.slice(0, level).reduce((a,b) => a + b, 0);
+        bonusText = `<div class="building-income">👥 +${total} лимит</div>`;
     }
     
     if (level === 0) {
-        if (!isTownHallLevelEnough(buildingId, 1)) {
+        if (userData.level < (config.requiredTownHall?.[0] || 1)) {
             statusClass = 'locked';
-            const reqLevel = config.requiredTownHall ? config.requiredTownHall[0] : 1;
-            statusBadge = `<span class="building-status locked">🔒 Требуется ратуша ${reqLevel}</span>`;
+            statusBadge = `<span class="building-status locked">🔒 Требуется ратуша ${config.requiredTownHall[0]}</span>`;
         } else {
             statusClass = 'unavailable';
             statusBadge = '<span class="building-status">🚫 Не построено</span>';
@@ -504,73 +343,25 @@ function generateBuildingCardHTML(buildingId) {
         statusBadge = `<span class="building-status built">🏗️ Ур. ${level}</span>`;
     }
     
-    const currentIncome = getBuildingIncome(buildingId, level);
+    const current = config.income?.[level - 1] || {};
     let incomeText = '';
-    if (level > 0 && Object.keys(currentIncome).length > 0) {
-        let parts = [];
-        if (currentIncome.gold) parts.push(`🪙+${currentIncome.gold}`);
-        if (currentIncome.wood) parts.push(`🪵+${currentIncome.wood}`);
-        if (currentIncome.stone) parts.push(`⛰️+${currentIncome.stone}`);
-        if (currentIncome.food) {
-            if (currentIncome.food > 0) parts.push(`🌾+${currentIncome.food}`);
-            else if (currentIncome.food < 0) parts.push(`🌾${currentIncome.food}`);
-        }
-        if (currentIncome.populationGrowth) parts.push(`👥+${currentIncome.populationGrowth}`);
-        if (parts.length > 0) {
-            incomeText = `<div class="building-income">📊 Доход: ${parts.join(' ')}/ч</div>`;
-        }
+    if (level > 0 && Object.keys(current).length) {
+        const parts = [];
+        if (current.gold) parts.push(`🪙+${current.gold}`);
+        if (current.wood) parts.push(`🪵+${current.wood}`);
+        if (current.stone) parts.push(`⛰️+${current.stone}`);
+        if (current.food) parts.push(current.food > 0 ? `🌾+${current.food}` : `🌾${current.food}`);
+        if (current.populationGrowth) parts.push(`👥+${current.populationGrowth}`);
+        incomeText = `<div class="building-income">📊 Доход: ${parts.join(' ')}/ч</div>`;
     }
     
-    let nextIncomeText = '';
     let upgradeBtn = '';
-    
-    if (level > 0 && level < config.maxLevel) {
-        const nextIncome = config.income[level];
-        const cost = getUpgradeCost(buildingId, level);
-        const canUpgradeNow = canUpgrade(buildingId, level);
-        
-        let parts = [];
-        if (nextIncome.gold) parts.push(`🪙+${nextIncome.gold}`);
-        if (nextIncome.wood) parts.push(`🪵+${nextIncome.wood}`);
-        if (nextIncome.stone) parts.push(`⛰️+${nextIncome.stone}`);
-        if (nextIncome.food) {
-            if (nextIncome.food > 0) parts.push(`🌾+${nextIncome.food}`);
-            else if (nextIncome.food < 0) parts.push(`🌾${nextIncome.food}`);
-        }
-        if (nextIncome.populationGrowth) parts.push(`👥+${nextIncome.populationGrowth}`);
-        
-        if (parts.length > 0) {
-            nextIncomeText = `<div class="building-next-income">📈 Ур.${level+1}: ${parts.join(' ')}/ч</div>`;
-        }
-        
-        let reqText = '';
-        if (!isTownHallLevelEnough(buildingId, level + 1)) {
-            const reqLevel = config.requiredTownHall ? config.requiredTownHall[level] : level + 1;
-            reqText = ` (треб. ратуша ${reqLevel})`;
-        }
-        
-        let btnClass = canUpgradeNow ? 'building-upgrade-btn available' : 'building-upgrade-btn unavailable';
-        
-        upgradeBtn = `
-            <button class="${btnClass}" onclick="upgradeBuilding('${buildingId}')" 
-                    ${!canUpgradeNow ? 'disabled' : ''}>
-                Улучшить до Ур.${level+1}${reqText} (🪙${cost.gold} 🪵${cost.wood}${cost.stone>0?` ⛰️${cost.stone}`:''})
-            </button>
-        `;
-    } else if (level === 0 && isTownHallLevelEnough(buildingId, 1)) {
+    if (level > 0 && level < config.maxLevel && canUpgrade(id, level)) {
+        const cost = config.upgradeCosts[level - 1];
+        upgradeBtn = `<button class="building-upgrade-btn" onclick="upgradeBuilding('${id}')">Улучшить до Ур.${level+1} (🪙${cost.gold} 🪵${cost.wood}${cost.stone ? ` ⛰️${cost.stone}` : ''})</button>`;
+    } else if (level === 0 && canUpgrade(id, 0)) {
         const cost = config.baseCost;
-        const canBuildNow = userData.gold >= cost.gold && 
-                           userData.wood >= cost.wood && 
-                           userData.stone >= cost.stone;
-        
-        let btnClass = canBuildNow ? 'building-upgrade-btn available' : 'building-upgrade-btn unavailable';
-        
-        upgradeBtn = `
-            <button class="${btnClass}" onclick="buildBuilding('${buildingId}')" 
-                    ${!canBuildNow ? 'disabled' : ''}>
-                Построить (🪙${cost.gold} 🪵${cost.wood}${cost.stone>0?` ⛰️${cost.stone}`:''})
-            </button>
-        `;
+        upgradeBtn = `<button class="building-upgrade-btn" onclick="buildBuilding('${id}')">Построить (🪙${cost.gold} 🪵${cost.wood}${cost.stone ? ` ⛰️${cost.stone}` : ''})</button>`;
     }
     
     return `
@@ -583,7 +374,6 @@ function generateBuildingCardHTML(buildingId) {
                 </div>
                 ${bonusText}
                 ${incomeText}
-                ${nextIncomeText}
                 ${upgradeBtn}
             </div>
         </div>
@@ -594,17 +384,82 @@ function updateCityUI() {
     updateResourcesDisplay();
     updateTownHallDisplay();
     
-    let socialHtml = '';
-    socialHtml += generateBuildingCardHTML('house');
-    socialHtml += generateBuildingCardHTML('tavern');
-    socialHtml += generateBuildingCardHTML('bath');
-    document.getElementById('socialBuildings').innerHTML = socialHtml;
+    document.getElementById('socialBuildings').innerHTML = 
+        generateBuildingCardHTML('house') + 
+        generateBuildingCardHTML('tavern') + 
+        generateBuildingCardHTML('bath');
     
-    let economicHtml = '';
-    economicHtml += generateBuildingCardHTML('farm');
-    economicHtml += generateBuildingCardHTML('lumber');
-    economicHtml += generateBuildingCardHTML('quarry');
-    document.getElementById('economicBuildings').innerHTML = economicHtml;
+    document.getElementById('economicBuildings').innerHTML = 
+        generateBuildingCardHTML('farm') + 
+        generateBuildingCardHTML('lumber') + 
+        generateBuildingCardHTML('quarry');
+}
+
+function updateSettingsUI() {
+    const section = document.getElementById('avatarSection');
+    if (!section) return;
+    
+    section.innerHTML = `
+        <h4>🖼️ Аватар</h4>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <img src="${AVATARS[userData.avatar].url}" style="width:60px; height:60px; border-radius:50%; border:3px solid #667eea;">
+            <div>
+                <div style="font-weight:bold;">${AVATARS[userData.avatar].name}</div>
+                <button class="building-upgrade-btn" onclick="openAvatarSelector()">Сменить аватар</button>
+            </div>
+        </div>
+    `;
+}
+
+function openAvatarSelector() {
+    const overlay = document.createElement('div');
+    overlay.className = 'avatar-selector-overlay';
+    overlay.innerHTML = `
+        <div class="avatar-selector">
+            <h3>Выберите аватар</h3>
+            <div class="avatar-grid" id="selectorAvatarGrid"></div>
+            <button class="building-upgrade-btn" onclick="this.remove()">Закрыть</button>
+        </div>
+    `;
+    
+    const grid = overlay.querySelector('#selectorAvatarGrid');
+    Object.keys(AVATARS).forEach(key => {
+        const a = AVATARS[key];
+        const owned = userData.owned_avatars.includes(key);
+        const selected = userData.avatar === key;
+        
+        const div = document.createElement('div');
+        div.className = `avatar-option ${selected ? 'selected' : ''}`;
+        div.innerHTML = `
+            <img src="${a.url}" class="avatar-option-img">
+            <div class="avatar-option-name">${a.name}</div>
+            ${!owned ? `<div class="avatar-option-price">${a.price} 🪙</div>` : ''}
+            <button class="building-upgrade-btn" onclick="${owned ? `selectAvatar('${key}')` : `buyAvatar('${key}')`}">
+                ${owned ? (selected ? 'Выбран' : 'Выбрать') : 'Купить'}
+            </button>
+        `;
+        grid.appendChild(div);
+    });
+    
+    document.body.appendChild(overlay);
+}
+
+async function buyAvatar(key) {
+    const a = AVATARS[key];
+    if (!a) return;
+    if (userData.gold < a.price) {
+        showToast('❌ Не хватает монет');
+        return;
+    }
+    await performAction('buy_avatar', { avatar: key, price: a.price });
+}
+
+async function selectAvatar(key) {
+    if (!userData.owned_avatars.includes(key)) {
+        showToast('❌ Сначала купите этот аватар');
+        return;
+    }
+    await performAction('select_avatar', { avatar: key });
 }
 
 async function upgradeTownHall() {
@@ -619,86 +474,58 @@ async function upgradeTownHall() {
     await performAction('upgrade_level', {});
 }
 
-async function buildBuilding(buildingId) {
-    const existing = buildings.find(b => b.id === buildingId);
-    if (existing) {
+async function buildBuilding(id) {
+    if (buildings.find(b => b.id === id)) {
         showToast('❌ Здание уже построено');
         return;
     }
-    const config = BUILDINGS_CONFIG[buildingId];
-    if (!config) return;
-    if (userData.gold < config.baseCost.gold || 
-        userData.wood < config.baseCost.wood || 
-        userData.stone < config.baseCost.stone) {
+    await performAction('build', { building_id: id });
+}
+
+async function upgradeBuilding(id) {
+    const b = buildings.find(b => b.id === id);
+    if (!b) {
+        await buildBuilding(id);
+        return;
+    }
+    if (!canUpgrade(id, b.level)) {
         showToast('❌ Не хватает ресурсов');
         return;
     }
-    await performAction('build', {building_id: buildingId});
+    await performAction('upgrade', { building_id: id });
 }
 
-async function upgradeBuilding(buildingId) {
-    const building = buildings.find(b => b.id === buildingId);
-    if (!building) {
-        await buildBuilding(buildingId);
-        return;
-    }
-    if (!canUpgrade(buildingId, building.level)) {
-        showToast('❌ Не хватает ресурсов или требуется выше уровень');
-        return;
-    }
-    await performAction('upgrade', {building_id: buildingId});
-}
-
-async function performAction(action, data = {}) {
+async function performAction(action, data) {
     try {
-        const response = await fetch(`${API_URL}/api/action`, {
+        const res = await fetch(`${API_URL}/api/action`, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({initData: tg.initData, action, data})
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ initData: tg.initData, action, data })
         });
-        const result = await response.json();
+        const result = await res.json();
         
-        if (result.success) {
-            if (result.state) {
-                if (result.state.gold !== undefined) userData.gold = result.state.gold;
-                if (result.state.wood !== undefined) userData.wood = result.state.wood;
-                if (result.state.food !== undefined) userData.food = result.state.food;
-                if (result.state.stone !== undefined) userData.stone = result.state.stone;
-                if (result.state.level !== undefined) userData.level = result.state.level;
-                if (result.state.population_current !== undefined) userData.population_current = result.state.population_current;
-                if (result.state.population_max !== undefined) userData.population_max = result.state.population_max;
-                if (result.state.lastCollection !== undefined) userData.lastCollection = result.state.lastCollection;
-                if (result.state.game_login !== undefined) {
-                    userData.game_login = result.state.game_login;
-                    updateUserInfo();
-                }
-                if (result.state.avatar !== undefined) {
-                    userData.avatar = result.state.avatar;
-                    updateAvatar();
-                    updateSettingsUI();
-                }
-                if (result.state.owned_avatars !== undefined) {
-                    userData.owned_avatars = result.state.owned_avatars;
-                }
-                if (result.state.buildings) buildings = result.state.buildings;
-                updateCityUI();
-                updateSettingsUI();
-                
-                if (action === 'build') showToast('✅ Построено!');
-                if (action === 'upgrade') showToast('✅ Улучшено!');
-                if (action === 'upgrade_level') showToast('🏛️ Ратуша улучшена!');
-                if (action === 'buy_avatar') {
-                    showToast('✅ Аватар куплен!');
-                }
-                if (action === 'select_avatar') showToast('✅ Аватар выбран!');
-                if (action === 'change_name_paid') showToast('✅ Имя изменено!');
-            }
+        if (result.success && result.state) {
+            Object.assign(userData, result.state);
+            if (result.state.buildings) buildings = result.state.buildings;
+            if (result.state.game_login) updateUserInfo();
+            if (result.state.avatar) updateAvatar();
+            updateCityUI();
+            updateSettingsUI();
+            
+            const messages = {
+                build: '✅ Построено!',
+                upgrade: '✅ Улучшено!',
+                upgrade_level: '🏛️ Ратуша улучшена!',
+                buy_avatar: '✅ Аватар куплен!',
+                select_avatar: '✅ Аватар выбран!',
+                change_name_paid: '✅ Имя изменено!'
+            };
+            if (messages[action]) showToast(messages[action]);
             return true;
-        } else {
-            showToast(`❌ ${result.error || 'Ошибка'}`);
-            return false;
         }
-    } catch (error) {
+        showToast(`❌ ${result.error || 'Ошибка'}`);
+        return false;
+    } catch {
         showToast('❌ Ошибка соединения');
         return false;
     }
@@ -706,134 +533,104 @@ async function performAction(action, data = {}) {
 
 async function login() {
     try {
-        const response = await fetch(`${API_URL}/api/auth`, {
+        const res = await fetch(`${API_URL}/api/auth`, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({initData: tg.initData})
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ initData: tg.initData })
         });
-        const data = await response.json();
-        
-        console.log('✅ Ответ сервера:', data); // ЭТО ВАЖНО
+        const data = await res.json();
         
         if (data.success) {
-            userData.id = data.user.id;
-            userData.username = data.user.username;
-            userData.game_login = data.user.game_login || '';
-            userData.avatar = data.user.avatar || 'male_free';
-            userData.owned_avatars = data.user.owned_avatars || ['male_free', 'female_free'];
-            userData.gold = data.user.gold;
-            userData.wood = data.user.wood;
-            userData.food = data.user.food;
-            userData.stone = data.user.stone;
-            userData.level = data.user.level;
-            userData.population_current = data.user.population_current || 10;
-            userData.population_max = data.user.population_max || 20;
-            userData.lastCollection = data.user.lastCollection || Date.now();
-            
-            buildings = data.buildings || [
-                {id:'house', level:1},
-                {id:'farm', level:1},
-                {id:'lumber', level:1}
-            ];
-            
+            Object.assign(userData, data.user);
+            buildings = data.buildings || buildings;
             updateUserInfo();
             updateCityUI();
             
-            console.log('👤 game_login:', userData.game_login); // И ЭТО
-            
+            // КЛЮЧЕВОЕ МЕСТО - проверка на показ окна регистрации
             if (!userData.game_login || userData.game_login === '' || userData.game_login === 'EMPTY') {
                 document.getElementById('loginOverlay').style.display = 'flex';
             } else {
                 document.getElementById('loginOverlay').style.display = 'none';
             }
         }
-    } catch (error) {
-        console.error('❌ Ошибка:', error);
+    } catch {
         showToast('⚠️ Ошибка загрузки');
     }
 }
 
 async function saveGameLogin() {
-    const loginInput = document.getElementById('newLogin');
-    let newLogin = loginInput.value.trim();
-    if (!newLogin) {
+    const input = document.getElementById('newLogin');
+    let name = input.value.trim();
+    if (!name) {
         showToast('❌ Введите имя');
         return;
     }
-    if (newLogin.length > 12) newLogin = newLogin.substring(0,12);
-    const success = await performAction('set_login', {game_login: newLogin});
-    if (success) {
+    if (name.length > 12) name = name.substring(0,12);
+    
+    if (await performAction('set_login', { game_login: name })) {
         document.getElementById('loginOverlay').style.display = 'none';
-        showToast(`✅ Добро пожаловать, ${newLogin}!`);
+        showToast(`✅ Добро пожаловать, ${name}!`);
     }
 }
 
 async function changeNamePaid() {
-    const nameInput = document.getElementById('newNameInput');
-    let newName = nameInput.value.trim();
-    
-    if (!newName) {
+    const input = document.getElementById('newNameInput');
+    let name = input.value.trim();
+    if (!name) {
         showToast('❌ Введите имя');
         return;
     }
-    
-    if (newName.length > 12) {
-        newName = newName.substring(0, 12);
-    }
-    
+    if (name.length > 12) name = name.substring(0,12);
     if (userData.gold < 5000) {
         showToast('❌ Не хватает монет');
         return;
     }
-    
-    await performAction('change_name_paid', { game_login: newName });
+    await performAction('change_name_paid', { game_login: name });
 }
 
-function switchTab(tabId) {
-    currentTab = tabId;
-    document.querySelectorAll('.tab').forEach(tab => {
-        tab.classList.toggle('active', tab.dataset.tab === tabId);
-    });
-    document.querySelectorAll('.tab-pane').forEach(pane => {
-        pane.classList.add('hidden');
-    });
-    document.getElementById(`tab${tabId.charAt(0).toUpperCase()+tabId.slice(1)}`).classList.remove('hidden');
+function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab').forEach(t => 
+        t.classList.toggle('active', t.dataset.tab === tab));
+    document.querySelectorAll('.tab-pane').forEach(p => 
+        p.classList.toggle('hidden', !p.id.includes(tab.charAt(0).toUpperCase() + tab.slice(1))));
     
-    if (tabId === 'settings') {
-        updateSettingsUI();
-    }
+    if (tab === 'settings') updateSettingsUI();
 }
 
 async function createClan() { showToast('🚧 В разработке'); }
 
 async function showTopClans() {
     try {
-        const response = await fetch(`${API_URL}/api/clans/top`);
-        const data = await response.json();
-        let html = '<h4 style="margin-bottom:10px;">🏆 Топ игроков</h4>';
-        if (!data.players || data.players.length === 0) {
-            html += '<p style="color:#666;">Пока нет игроков</p>';
+        const res = await fetch(`${API_URL}/api/clans/top`);
+        const data = await res.json();
+        let html = '<h4>🏆 Топ игроков</h4>';
+        if (!data.players?.length) {
+            html += '<p>Пока нет игроков</p>';
         } else {
             data.players.forEach((p,i) => {
-                html += `<div style="padding:8px; margin:5px 0; background:white; border-radius:8px; display:flex; justify-content:space-between;">
-                    <span><b>${i+1}.</b> ${p.game_login || 'Без имени'}</span>
-                    <span>🪙${p.gold}</span>
-                </div>`;
+                html += `<div><b>${i+1}.</b> ${p.game_login || 'Без имени'} 🪙${p.gold}</div>`;
             });
         }
         document.getElementById('topClans').innerHTML = html;
-    } catch { showToast('❌ Ошибка'); }
+    } catch {
+        showToast('❌ Ошибка');
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     login();
-    document.querySelectorAll('.tab').forEach(tab => {
-        tab.addEventListener('click', () => switchTab(tab.dataset.tab));
-    });
-    document.getElementById('createClanBtn').addEventListener('click', createClan);
-    document.getElementById('topClansBtn').addEventListener('click', showTopClans);
-    document.getElementById('confirmLogin').addEventListener('click', saveGameLogin);
-    document.getElementById('changeNameWithPriceBtn').addEventListener('click', changeNamePaid);
-    setInterval(() => { updateTimer(); checkAutoCollection(); }, 1000);
+    document.querySelectorAll('.tab').forEach(t => 
+        t.addEventListener('click', () => switchTab(t.dataset.tab)));
+    document.getElementById('createClanBtn')?.addEventListener('click', createClan);
+    document.getElementById('topClansBtn')?.addEventListener('click', showTopClans);
+    document.getElementById('confirmLogin')?.addEventListener('click', saveGameLogin);
+    document.getElementById('changeNameWithPriceBtn')?.addEventListener('click', changeNamePaid);
+    
+    setInterval(() => {
+        updateTimer();
+        checkAutoCollection();
+    }, 1000);
+    
     switchTab('city');
 });
