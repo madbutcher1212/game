@@ -713,6 +713,8 @@ async function login() {
         });
         const data = await response.json();
         
+        console.log('✅ Ответ сервера:', data); // ЭТО ВАЖНО
+        
         if (data.success) {
             userData.id = data.user.id;
             userData.username = data.user.username;
@@ -737,14 +739,16 @@ async function login() {
             updateUserInfo();
             updateCityUI();
             
-           // Проверка на показ окна
-if (!userData.game_login || userData.game_login === '' || userData.game_login === 'EMPTY') {
-    document.getElementById('loginOverlay').style.display = 'flex';
-} else {
-    document.getElementById('loginOverlay').style.display = 'none';
-}
+            console.log('👤 game_login:', userData.game_login); // И ЭТО
+            
+            if (!userData.game_login || userData.game_login === '' || userData.game_login === 'EMPTY') {
+                document.getElementById('loginOverlay').style.display = 'flex';
+            } else {
+                document.getElementById('loginOverlay').style.display = 'none';
+            }
         }
     } catch (error) {
+        console.error('❌ Ошибка:', error);
         showToast('⚠️ Ошибка загрузки');
     }
 }
