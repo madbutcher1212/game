@@ -4,6 +4,7 @@ const tg = window.Telegram.WebApp;
 tg.expand();
 tg.ready();
 
+// Конфиг аватарок
 const AVATARS = {
     'male_free': {
         name: 'Мужской',
@@ -27,6 +28,7 @@ const AVATARS = {
     }
 };
 
+// Данные пользователя
 let userData = {
     id: null,
     username: '',
@@ -43,41 +45,44 @@ let userData = {
     lastCollection: Date.now()
 };
 
+// Постройки
 let buildings = [
     { id: 'house', level: 1 },
     { id: 'farm', level: 1 },
     { id: 'lumber', level: 1 }
 ];
 
-const TOWN_HALL_INCOME = {1:5,2:10,3:20,4:45,5:100};
-
+// Константы
+const TOWN_HALL_INCOME = {1:5, 2:10, 3:20, 4:45, 5:100};
 const TOWN_HALL_UPGRADE_COST = {
-    2: {gold:50,wood:100,stone:0},
-    3: {gold:500,wood:400,stone:0},
-    4: {gold:2000,wood:1200,stone:250},
-    5: {gold:10000,wood:6000,stone:2500}
+    2: {gold:50, wood:100, stone:0},
+    3: {gold:500, wood:400, stone:0},
+    4: {gold:2000, wood:1200, stone:250},
+    5: {gold:10000, wood:6000, stone:2500}
 };
 
+// Конфиг зданий
 const BUILDINGS_CONFIG = {
     'house': {
         name: 'Жилой район', icon: '🏘️', section: 'social', maxLevel: 5,
-        baseCost: {gold:50,wood:20,stone:0},
+        baseCost: {gold:50, wood:20, stone:0},
         upgradeCosts: [
-            {gold:50,wood:100,stone:50},
-            {gold:250,wood:300,stone:125},
-            {gold:1500,wood:1000,stone:400},
-            {gold:7200,wood:5300,stone:2450}
+            {gold:50, wood:100, stone:50},
+            {gold:250, wood:300, stone:125},
+            {gold:1500, wood:1000, stone:400},
+            {gold:7200, wood:5300, stone:2450}
         ],
-        populationBonus: [20,20,40,100,250]
+        populationBonus: [20,20,40,100,250],
+        income: [{},{},{},{},{}]
     },
     'tavern': {
         name: 'Корчма', icon: '🍺', section: 'social', maxLevel: 5,
-        baseCost: {gold:100,wood:100,stone:25},
+        baseCost: {gold:100, wood:100, stone:25},
         upgradeCosts: [
-            {gold:250,wood:250,stone:100},
-            {gold:900,wood:900,stone:400},
-            {gold:1800,wood:1800,stone:800},
-            {gold:8000,wood:4000,stone:2500}
+            {gold:250, wood:250, stone:100},
+            {gold:900, wood:900, stone:400},
+            {gold:1800, wood:1800, stone:800},
+            {gold:8000, wood:4000, stone:2500}
         ],
         income: [
             {gold:3, food: -3, populationGrowth: 1},
@@ -90,12 +95,12 @@ const BUILDINGS_CONFIG = {
     },
     'bath': {
         name: 'Купели', icon: '💧', section: 'social', maxLevel: 5,
-        baseCost: {gold:100,wood:100,stone:25},
+        baseCost: {gold:100, wood:100, stone:25},
         upgradeCosts: [
-            {gold:250,wood:250,stone:100},
-            {gold:900,wood:900,stone:400},
-            {gold:1800,wood:1800,stone:800},
-            {gold:8000,wood:4000,stone:2500}
+            {gold:250, wood:250, stone:100},
+            {gold:900, wood:900, stone:400},
+            {gold:1800, wood:1800, stone:800},
+            {gold:8000, wood:4000, stone:2500}
         ],
         income: [
             {gold:2, populationGrowth: 1},
@@ -108,54 +113,57 @@ const BUILDINGS_CONFIG = {
     },
     'farm': {
         name: 'Ферма', icon: '🌾', section: 'economic', maxLevel: 5,
-        baseCost: {gold:30,wood:40,stone:0},
+        baseCost: {gold:30, wood:40, stone:0},
         upgradeCosts: [
-            {gold:50,wood:100,stone:0},
-            {gold:250,wood:300,stone:0},
-            {gold:1000,wood:1000,stone:150},
-            {gold:5200,wood:6300,stone:2450}
+            {gold:50, wood:100, stone:0},
+            {gold:250, wood:300, stone:0},
+            {gold:1000, wood:1000, stone:150},
+            {gold:5200, wood:6300, stone:2450}
         ],
         income: [
-            {food:10},{food:25},{food:60},{food:120},{food:260}
+            {food:10}, {food:25}, {food:60}, {food:120}, {food:260}
         ]
     },
     'lumber': {
         name: 'Лесопилка', icon: '🪵', section: 'economic', maxLevel: 5,
-        baseCost: {gold:40,wood:30,stone:0},
+        baseCost: {gold:40, wood:30, stone:0},
         upgradeCosts: [
-            {gold:50,wood:100,stone:0},
-            {gold:350,wood:200,stone:50},
-            {gold:1300,wood:900,stone:550},
-            {gold:7000,wood:4500,stone:3500}
+            {gold:50, wood:100, stone:0},
+            {gold:350, wood:200, stone:50},
+            {gold:1300, wood:900, stone:550},
+            {gold:7000, wood:4500, stone:3500}
         ],
         income: [
-            {wood:10},{wood:20},{wood:40},{wood:100},{wood:200}
+            {wood:10}, {wood:20}, {wood:40}, {wood:100}, {wood:200}
         ]
     },
     'quarry': {
         name: 'Каменоломня', icon: '⛰️', section: 'economic', maxLevel: 5,
-        baseCost: {gold:20,wood:80,stone:0},
+        baseCost: {gold:20, wood:80, stone:0},
         upgradeCosts: [
-            {gold:50,wood:150,stone:0},
-            {gold:250,wood:350,stone:100},
-            {gold:1000,wood:1700,stone:150},
-            {gold:6200,wood:7300,stone:1450}
+            {gold:50, wood:150, stone:0},
+            {gold:250, wood:350, stone:100},
+            {gold:1000, wood:1700, stone:150},
+            {gold:6200, wood:7300, stone:1450}
         ],
         income: [
-            {stone:5},{stone:15},{stone:35},{stone:80},{stone:160}
+            {stone:5}, {stone:15}, {stone:35}, {stone:80}, {stone:160}
         ]
     }
 };
 
 const COLLECTION_INTERVAL = 60 * 60 * 1000;
 let currentTab = 'city';
+let selectedBuildingForUpgrade = null;
 
+// Форматирование чисел
 function formatNumber(num) {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'м';
     if (num >= 1000) return (num / 1000).toFixed(1) + 'к';
     return num.toString();
 }
 
+// Уведомления
 function showToast(message) {
     const toast = document.getElementById('toast');
     toast.textContent = message;
@@ -163,6 +171,7 @@ function showToast(message) {
     setTimeout(() => toast.style.display = 'none', 2000);
 }
 
+// Показать точное значение ресурса
 function showExactValue(resource) {
     const values = {
         gold: userData.gold,
@@ -175,25 +184,32 @@ function showExactValue(resource) {
     showToast(`${names[resource]}: ${values[resource]}`);
 }
 
+// Обновление аватара
 function updateAvatar() {
     const img = document.getElementById('avatarImg');
     const placeholder = document.getElementById('avatarPlaceholder');
+    const settingsImg = document.getElementById('settingsAvatarImg');
     const avatar = AVATARS[userData.avatar];
     
-    if (avatar && avatar.url) {
+    if (avatar?.url) {
         img.src = avatar.url;
         img.style.display = 'block';
         placeholder.style.display = 'none';
+        if (settingsImg) settingsImg.src = avatar.url;
     } else {
         placeholder.textContent = userData.game_login?.charAt(0).toUpperCase() || '👤';
         placeholder.style.display = 'block';
         img.style.display = 'none';
     }
+    
+    const nameEl = document.getElementById('settingsAvatarName');
+    if (nameEl) nameEl.textContent = avatar?.name || 'Мужской';
 }
 
+// Обновление информации о пользователе
 function updateUserInfo() {
     let name = userData.game_login || 'Игрок';
-    if (name.length > 12) name = name.substring(0,12);
+    if (name.length > 12) name = name.substring(0, 12);
     document.getElementById('userName').textContent = name;
     document.getElementById('userLogin').textContent = '@' + (userData.username || 'username');
     document.getElementById('levelBadge').textContent = userData.level;
@@ -201,10 +217,12 @@ function updateUserInfo() {
     updateAvatar();
 }
 
+// Получить уровень здания
 function getBuildingLevel(id) {
     return buildings.find(b => b.id === id)?.level || 0;
 }
 
+// Рассчитать доход в час
 function calculateHourlyIncome() {
     let income = {
         gold: TOWN_HALL_INCOME[userData.level] || 0,
@@ -227,17 +245,18 @@ function calculateHourlyIncome() {
     return income;
 }
 
+// Обновление отображения ресурсов
 function updateResourcesDisplay() {
     const income = calculateHourlyIncome();
     
     document.getElementById('goldDisplay').textContent = formatNumber(userData.gold);
-    document.getElementById('goldIncome').textContent = `+${formatNumber(income.gold)}/ч`;
+    document.getElementById('goldIncome').textContent = `+${formatNumber(income.gold)}`;
     
     document.getElementById('woodDisplay').textContent = formatNumber(userData.wood);
-    document.getElementById('woodIncome').textContent = `+${formatNumber(income.wood)}/ч`;
+    document.getElementById('woodIncome').textContent = `+${formatNumber(income.wood)}`;
     
     document.getElementById('stoneDisplay').textContent = formatNumber(userData.stone);
-    document.getElementById('stoneIncome').textContent = `+${formatNumber(income.stone)}/ч`;
+    document.getElementById('stoneIncome').textContent = `+${formatNumber(income.stone)}`;
     
     const foodProd = income.food;
     const foodCons = userData.population_current;
@@ -245,7 +264,7 @@ function updateResourcesDisplay() {
     
     document.getElementById('foodDisplay').textContent = formatNumber(userData.food);
     document.getElementById('foodIncome').textContent = 
-        foodBal > 0 ? `+${formatNumber(foodBal)}/ч` : foodBal < 0 ? `${formatNumber(foodBal)}/ч` : '0/ч';
+        foodBal > 0 ? `+${formatNumber(foodBal)}` : foodBal < 0 ? `${formatNumber(foodBal)}` : '0';
     document.getElementById('foodIncome').className = foodBal < 0 ? 'resource-income-negative' : 'resource-income';
     
     document.getElementById('populationDisplay').textContent = 
@@ -253,24 +272,18 @@ function updateResourcesDisplay() {
     
     const canGrow = userData.food > 0 || foodProd >= foodCons;
     const totalGrowth = canGrow ? 3 + income.populationGrowth : 0;
-    document.getElementById('populationGrowth').textContent = totalGrowth > 0 ? `+${totalGrowth}/ч` : '⚠️';
+    document.getElementById('populationGrowth').textContent = totalGrowth > 0 ? `+${totalGrowth}` : '⚠️';
 }
 
+// Обновление отображения ратуши
 function updateTownHallDisplay() {
     const income = TOWN_HALL_INCOME[userData.level] || 0;
     document.getElementById('townHallIncome').textContent = `+${income} 🪙/ч`;
     document.getElementById('townHallLevel').textContent = userData.level;
     document.getElementById('townHallLevelBadge').textContent = userData.level;
-    
-    if (userData.level < 5) {
-        const cost = TOWN_HALL_UPGRADE_COST[userData.level + 1];
-        document.getElementById('townHallNext').innerHTML = 
-            `⬆️ Улучшить (🪙${cost.gold} 🪵${cost.wood}${cost.stone ? ` ⛰️${cost.stone}` : ''})`;
-    } else {
-        document.getElementById('townHallNext').textContent = '🏆 Макс. уровень';
-    }
 }
 
+// Обновление таймера
 function updateTimer() {
     const now = Date.now();
     const timePassed = now - userData.lastCollection;
@@ -289,12 +302,14 @@ function updateTimer() {
     }
 }
 
+// Проверка автосбора
 async function checkAutoCollection() {
     if (Date.now() - userData.lastCollection >= COLLECTION_INTERVAL) {
         await performAction('collect', {});
     }
 }
 
+// Проверка возможности улучшения
 function canUpgrade(buildingId, currentLevel) {
     if (buildingId === 'townhall') {
         if (userData.level >= 5) return false;
@@ -318,6 +333,7 @@ function canUpgrade(buildingId, currentLevel) {
     return userData.gold >= cost.gold && userData.wood >= cost.wood && userData.stone >= cost.stone;
 }
 
+// Генерация карточки здания
 function generateBuildingCardHTML(id) {
     const config = BUILDINGS_CONFIG[id];
     if (!config) return '';
@@ -326,7 +342,7 @@ function generateBuildingCardHTML(id) {
     let statusClass = '', statusBadge = '', bonusText = '';
     
     if (id === 'house' && level > 0) {
-        const total = config.populationBonus.slice(0, level).reduce((a,b) => a + b, 0);
+        const total = config.populationBonus.slice(0, level).reduce((a, b) => a + b, 0);
         bonusText = `<div class="building-income">👥 +${total} лимит</div>`;
     }
     
@@ -357,11 +373,9 @@ function generateBuildingCardHTML(id) {
     
     let upgradeBtn = '';
     if (level > 0 && level < config.maxLevel && canUpgrade(id, level)) {
-        const cost = config.upgradeCosts[level - 1];
-        upgradeBtn = `<button class="building-upgrade-btn" onclick="upgradeBuilding('${id}')">Улучшить до Ур.${level+1} (🪙${cost.gold} 🪵${cost.wood}${cost.stone ? ` ⛰️${cost.stone}` : ''})</button>`;
+        upgradeBtn = `<button class="building-upgrade-btn" onclick="showUpgradeModal('${id}')">Улучшить</button>`;
     } else if (level === 0 && canUpgrade(id, 0)) {
-        const cost = config.baseCost;
-        upgradeBtn = `<button class="building-upgrade-btn" onclick="buildBuilding('${id}')">Построить (🪙${cost.gold} 🪵${cost.wood}${cost.stone ? ` ⛰️${cost.stone}` : ''})</button>`;
+        upgradeBtn = `<button class="building-upgrade-btn" onclick="showUpgradeModal('${id}')">Построить</button>`;
     }
     
     return `
@@ -380,6 +394,91 @@ function generateBuildingCardHTML(id) {
     `;
 }
 
+// Показать модальное окно улучшения
+function showUpgradeModal(buildingId) {
+    const config = BUILDINGS_CONFIG[buildingId];
+    const level = getBuildingLevel(buildingId);
+    const nextLevel = level + 1;
+    const nextIncome = config.income?.[level] || {};
+    const cost = level === 0 ? config.baseCost : config.upgradeCosts[level - 1];
+    
+    let incomeText = '';
+    const parts = [];
+    if (nextIncome.gold) parts.push(`🪙+${nextIncome.gold}`);
+    if (nextIncome.wood) parts.push(`🪵+${nextIncome.wood}`);
+    if (nextIncome.stone) parts.push(`⛰️+${nextIncome.stone}`);
+    if (nextIncome.food) parts.push(nextIncome.food > 0 ? `🌾+${nextIncome.food}` : `🌾${nextIncome.food}`);
+    if (nextIncome.populationGrowth) parts.push(`👥+${nextIncome.populationGrowth}`);
+    incomeText = parts.join(' ') || 'нет дохода';
+    
+    const modal = document.getElementById('upgradeModal');
+    modal.innerHTML = `
+        <div class="upgrade-info">
+            <h3>${level === 0 ? 'Постройка' : 'Улучшение'} ${config.name}</h3>
+            <div class="upgrade-stats">
+                <div class="upgrade-stat">
+                    <span>Текущий уровень:</span>
+                    <span>${level || 'нет'}</span>
+                </div>
+                <div class="upgrade-stat">
+                    <span>Новый уровень:</span>
+                    <span>${nextLevel}</span>
+                </div>
+                <div class="upgrade-stat">
+                    <span>Новый доход:</span>
+                    <span>${incomeText}/ч</span>
+                </div>
+            </div>
+            <div class="upgrade-cost">
+                <h4>Стоимость:</h4>
+                <div class="upgrade-cost-item">
+                    <span>🪙 Золото:</span>
+                    <span>${cost.gold}</span>
+                </div>
+                <div class="upgrade-cost-item">
+                    <span>🪵 Дерево:</span>
+                    <span>${cost.wood}</span>
+                </div>
+                ${cost.stone ? `
+                <div class="upgrade-cost-item">
+                    <span>⛰️ Камень:</span>
+                    <span>${cost.stone}</span>
+                </div>
+                ` : ''}
+            </div>
+            <button class="btn" onclick="confirmUpgrade('${buildingId}')">${level === 0 ? 'Построить' : 'Улучшить'}</button>
+            <button class="btn" style="margin-top:10px; background:#999;" onclick="closeUpgradeModal()">Отмена</button>
+        </div>
+    `;
+    
+    document.getElementById('upgradeOverlay').style.display = 'flex';
+    selectedBuildingForUpgrade = buildingId;
+}
+
+// Закрыть окно улучшения
+function closeUpgradeModal() {
+    document.getElementById('upgradeOverlay').style.display = 'none';
+    selectedBuildingForUpgrade = null;
+}
+
+// Подтвердить улучшение
+async function confirmUpgrade(buildingId) {
+    closeUpgradeModal();
+    const level = getBuildingLevel(buildingId);
+    if (level === 0) {
+        await buildBuilding(buildingId);
+    } else {
+        await upgradeBuilding(buildingId);
+    }
+}
+
+// Переключение секций
+function toggleSection(section) {
+    const el = document.getElementById(section + 'Section');
+    el.classList.toggle('collapsed');
+}
+
+// Обновление UI города
 function updateCityUI() {
     updateResourcesDisplay();
     updateTownHallDisplay();
@@ -395,34 +494,11 @@ function updateCityUI() {
         generateBuildingCardHTML('quarry');
 }
 
-function updateSettingsUI() {
-    const section = document.getElementById('avatarSection');
-    if (!section) return;
-    
-    section.innerHTML = `
-        <h4>🖼️ Аватар</h4>
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <img src="${AVATARS[userData.avatar].url}" style="width:60px; height:60px; border-radius:50%; border:3px solid #667eea;">
-            <div>
-                <div style="font-weight:bold;">${AVATARS[userData.avatar].name}</div>
-                <button class="building-upgrade-btn" onclick="openAvatarSelector()">Сменить аватар</button>
-            </div>
-        </div>
-    `;
-}
-
+// Открыть селектор аватаров
 function openAvatarSelector() {
-    const overlay = document.createElement('div');
-    overlay.className = 'avatar-selector-overlay';
-    overlay.innerHTML = `
-        <div class="avatar-selector">
-            <h3>Выберите аватар</h3>
-            <div class="avatar-grid" id="selectorAvatarGrid"></div>
-            <button class="building-upgrade-btn" onclick="this.remove()">Закрыть</button>
-        </div>
-    `;
+    const grid = document.getElementById('avatarGrid');
+    grid.innerHTML = '';
     
-    const grid = overlay.querySelector('#selectorAvatarGrid');
     Object.keys(AVATARS).forEach(key => {
         const a = AVATARS[key];
         const owned = userData.owned_avatars.includes(key);
@@ -434,16 +510,26 @@ function openAvatarSelector() {
             <img src="${a.url}" class="avatar-option-img">
             <div class="avatar-option-name">${a.name}</div>
             ${!owned ? `<div class="avatar-option-price">${a.price} 🪙</div>` : ''}
-            <button class="building-upgrade-btn" onclick="${owned ? `selectAvatar('${key}')` : `buyAvatar('${key}')`}">
-                ${owned ? (selected ? 'Выбран' : 'Выбрать') : 'Купить'}
-            </button>
         `;
+        div.onclick = () => {
+            if (owned) {
+                selectAvatar(key);
+            } else {
+                buyAvatar(key);
+            }
+        };
         grid.appendChild(div);
     });
     
-    document.body.appendChild(overlay);
+    document.getElementById('avatarOverlay').style.display = 'flex';
 }
 
+// Закрыть селектор аватаров
+function closeAvatarSelector() {
+    document.getElementById('avatarOverlay').style.display = 'none';
+}
+
+// Купить аватар
 async function buyAvatar(key) {
     const a = AVATARS[key];
     if (!a) return;
@@ -452,28 +538,29 @@ async function buyAvatar(key) {
         return;
     }
     await performAction('buy_avatar', { avatar: key, price: a.price });
+    closeAvatarSelector();
 }
 
+// Выбрать аватар
 async function selectAvatar(key) {
     if (!userData.owned_avatars.includes(key)) {
         showToast('❌ Сначала купите этот аватар');
         return;
     }
     await performAction('select_avatar', { avatar: key });
+    closeAvatarSelector();
 }
 
+// Улучшить ратушу
 async function upgradeTownHall() {
     if (userData.level >= 5) {
         showToast('🏛️ Максимальный уровень');
         return;
     }
-    if (!canUpgrade('townhall', userData.level)) {
-        showToast('❌ Не хватает ресурсов');
-        return;
-    }
-    await performAction('upgrade_level', {});
+    showUpgradeModal('townhall');
 }
 
+// Построить здание
 async function buildBuilding(id) {
     if (buildings.find(b => b.id === id)) {
         showToast('❌ Здание уже построено');
@@ -482,6 +569,7 @@ async function buildBuilding(id) {
     await performAction('build', { building_id: id });
 }
 
+// Улучшить здание
 async function upgradeBuilding(id) {
     const b = buildings.find(b => b.id === id);
     if (!b) {
@@ -495,6 +583,7 @@ async function upgradeBuilding(id) {
     await performAction('upgrade', { building_id: id });
 }
 
+// Выполнить действие
 async function performAction(action, data) {
     try {
         const res = await fetch(`${API_URL}/api/action`, {
@@ -507,10 +596,9 @@ async function performAction(action, data) {
         if (result.success && result.state) {
             Object.assign(userData, result.state);
             if (result.state.buildings) buildings = result.state.buildings;
-            if (result.state.game_login) updateUserInfo();
-            if (result.state.avatar) updateAvatar();
+            updateUserInfo();
             updateCityUI();
-            updateSettingsUI();
+            updateSettingsUI?.();
             
             const messages = {
                 build: '✅ Построено!',
@@ -531,6 +619,7 @@ async function performAction(action, data) {
     }
 }
 
+// Авторизация
 async function login() {
     try {
         const res = await fetch(`${API_URL}/api/auth`, {
@@ -546,11 +635,8 @@ async function login() {
             updateUserInfo();
             updateCityUI();
             
-            // КЛЮЧЕВОЕ МЕСТО - проверка на показ окна регистрации
             if (!userData.game_login || userData.game_login === '' || userData.game_login === 'EMPTY') {
                 document.getElementById('loginOverlay').style.display = 'flex';
-            } else {
-                document.getElementById('loginOverlay').style.display = 'none';
             }
         }
     } catch {
@@ -558,6 +644,7 @@ async function login() {
     }
 }
 
+// Сохранить логин при первом входе
 async function saveGameLogin() {
     const input = document.getElementById('newLogin');
     let name = input.value.trim();
@@ -565,7 +652,7 @@ async function saveGameLogin() {
         showToast('❌ Введите имя');
         return;
     }
-    if (name.length > 12) name = name.substring(0,12);
+    if (name.length > 12) name = name.substring(0, 12);
     
     if (await performAction('set_login', { game_login: name })) {
         document.getElementById('loginOverlay').style.display = 'none';
@@ -573,6 +660,7 @@ async function saveGameLogin() {
     }
 }
 
+// Платная смена имени
 async function changeNamePaid() {
     const input = document.getElementById('newNameInput');
     let name = input.value.trim();
@@ -580,7 +668,7 @@ async function changeNamePaid() {
         showToast('❌ Введите имя');
         return;
     }
-    if (name.length > 12) name = name.substring(0,12);
+    if (name.length > 12) name = name.substring(0, 12);
     if (userData.gold < 5000) {
         showToast('❌ Не хватает монет');
         return;
@@ -588,6 +676,7 @@ async function changeNamePaid() {
     await performAction('change_name_paid', { game_login: name });
 }
 
+// Переключение вкладок
 function switchTab(tab) {
     currentTab = tab;
     document.querySelectorAll('.tab').forEach(t => 
@@ -595,11 +684,14 @@ function switchTab(tab) {
     document.querySelectorAll('.tab-pane').forEach(p => 
         p.classList.toggle('hidden', !p.id.includes(tab.charAt(0).toUpperCase() + tab.slice(1))));
     
-    if (tab === 'settings') updateSettingsUI();
+    if (tab === 'settings') {
+        document.getElementById('settingsAvatarImg').src = AVATARS[userData.avatar].url;
+        document.getElementById('settingsAvatarName').textContent = AVATARS[userData.avatar].name;
+    }
 }
 
+// Кланы (заглушки)
 async function createClan() { showToast('🚧 В разработке'); }
-
 async function showTopClans() {
     try {
         const res = await fetch(`${API_URL}/api/clans/top`);
@@ -608,7 +700,7 @@ async function showTopClans() {
         if (!data.players?.length) {
             html += '<p>Пока нет игроков</p>';
         } else {
-            data.players.forEach((p,i) => {
+            data.players.forEach((p, i) => {
                 html += `<div><b>${i+1}.</b> ${p.game_login || 'Без имени'} 🪙${p.gold}</div>`;
             });
         }
@@ -618,10 +710,14 @@ async function showTopClans() {
     }
 }
 
+// Инициализация
 document.addEventListener('DOMContentLoaded', () => {
     login();
+    
     document.querySelectorAll('.tab').forEach(t => 
         t.addEventListener('click', () => switchTab(t.dataset.tab)));
+    
+    document.getElementById('townHall').addEventListener('click', upgradeTownHall);
     document.getElementById('createClanBtn')?.addEventListener('click', createClan);
     document.getElementById('topClansBtn')?.addEventListener('click', showTopClans);
     document.getElementById('confirmLogin')?.addEventListener('click', saveGameLogin);
