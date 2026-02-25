@@ -493,15 +493,21 @@ def game_action():
             }
         
         # ===== СМЕНА ИМЕНИ (ПРИ РЕГИСТРАЦИИ) =====
-        elif action_type == 'set_login':
+              elif action_type == 'set_login':
             new_login = action_data.get('game_login', '').strip()
+            
             if not new_login:
                 return jsonify({'success': False, 'error': 'Login cannot be empty'})
+            
             if len(new_login) > 12:
                 new_login = new_login[:12]
             
+            # Просто обновляем имя в БД
             supabase.table("players").update({'game_login': new_login}).eq('id', player_id).execute()
             
+            print(f"✅ Имя сохранено: {new_login}")
+            
+            # Возвращаем актуальные данные
             response_data['state'] = {
                 'game_login': new_login,
                 'gold': gold,
@@ -603,5 +609,6 @@ def top_clans():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
+
 
 
