@@ -4,7 +4,6 @@ const tg = window.Telegram.WebApp;
 tg.expand();
 tg.ready();
 
-// Конфиг аватарок
 const AVATARS = {
     'male_free': {
         name: 'Мужской',
@@ -167,7 +166,6 @@ const BUILDINGS_CONFIG = {
 let currentTab = 'city';
 const COLLECTION_INTERVAL = 60 * 60 * 1000;
 
-// Форматирование чисел
 function formatNumber(num) {
     if (num >= 1000000) {
         return (num / 1000000).toFixed(1) + 'м';
@@ -178,7 +176,6 @@ function formatNumber(num) {
     return num.toString();
 }
 
-// Показать точное значение
 function showExactValue(resource) {
     let value, name;
     switch(resource) {
@@ -691,7 +688,6 @@ async function performAction(action, data = {}) {
                 if (action === 'upgrade') showToast('✅ Улучшено!');
                 if (action === 'upgrade_level') showToast('🏛️ Ратуша улучшена!');
                 if (action === 'buy_avatar') {
-                    userData.owned_avatars.push(data.avatar);
                     showToast('✅ Аватар куплен!');
                 }
                 if (action === 'select_avatar') showToast('✅ Аватар выбран!');
