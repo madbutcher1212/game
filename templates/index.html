@@ -6,7 +6,6 @@
     <title>Rodstone War</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="/static/style.css">
-    <script src="/static/script.js"></script>
 </head>
 <body>
     <div id="loginOverlay" class="login-overlay">
@@ -15,7 +14,7 @@
             <h3>Добро пожаловать!</h3>
             <p>Придумайте имя в игре (до 12 символов):</p>
             <input type="text" id="newLogin" placeholder="Ваше игровое имя" maxlength="12">
-            <button class="building-upgrade-btn" id="confirmLogin" style="width:100%; padding:12px;">Начать игру</button>
+            <button class="building-upgrade-btn" id="confirmLogin">Начать игру</button>
         </div>
     </div>
 
@@ -33,25 +32,23 @@
                     </div>
                     <div class="user-login" id="userLogin">@username</div>
                 </div>
-                
                 <div class="resources-compact">
                     <div class="resource-block" onclick="showExactValue('gold')">
-                        <span class="resource-icon">🪙</span>
-                        <span class="resource-value" id="goldDisplay">100</span>
+                        <span>🪙</span>
+                        <span id="goldDisplay">100</span>
                         <span class="resource-income" id="goldIncome">+0/ч</span>
                     </div>
                     <div class="resource-block" onclick="showExactValue('population')">
-                        <span class="resource-icon">👥</span>
-                        <span class="resource-value" id="populationDisplay">10/20</span>
+                        <span>👥</span>
+                        <span id="populationDisplay">10/20</span>
                         <span class="resource-income" id="populationGrowth">+3/ч</span>
                     </div>
                 </div>
             </div>
-            
             <div class="income-timer" id="incomeTimer">
                 <div>⏳ Следующий сбор через: <span id="timerDisplay">59:59</span></div>
                 <div class="timer-progress">
-                    <div class="timer-progress-bar" id="timerProgress" style="width: 100%;"></div>
+                    <div class="timer-progress-bar" id="timerProgress"></div>
                 </div>
             </div>
         </div>
@@ -61,23 +58,23 @@
                 <div id="tabCity" class="tab-pane active">
                     <div class="city-resources">
                         <div class="city-resource-item" onclick="showExactValue('wood')">
-                            <span class="resource-icon">🪵</span>
-                            <span class="resource-value" id="woodDisplay">50</span>
+                            <span>🪵</span>
+                            <span id="woodDisplay">50</span>
                             <span class="resource-income" id="woodIncome">+0/ч</span>
                         </div>
                         <div class="city-resource-item" onclick="showExactValue('stone')">
-                            <span class="resource-icon">⛰️</span>
-                            <span class="resource-value" id="stoneDisplay">0</span>
+                            <span>⛰️</span>
+                            <span id="stoneDisplay">0</span>
                             <span class="resource-income" id="stoneIncome">+0/ч</span>
                         </div>
                         <div class="city-resource-item" onclick="showExactValue('food')">
-                            <span class="resource-icon">🌾</span>
-                            <span class="resource-value" id="foodDisplay">50</span>
+                            <span>🌾</span>
+                            <span id="foodDisplay">50</span>
                             <span class="resource-income" id="foodIncome">+0/ч</span>
                         </div>
                     </div>
                     
-                    <div class="city-container" id="cityContainer">
+                    <div class="city-container">
                         <div class="town-hall" id="townHall" onclick="upgradeTownHall()">
                             <div class="town-hall-icon">🏛️</div>
                             <div class="town-hall-info">
@@ -90,106 +87,70 @@
                         </div>
                         
                         <div class="buildings-section">
-                            <div class="section-title">
-                                <span>🏘️</span> Социальные постройки
-                            </div>
+                            <div class="section-title"><span>🏘️</span> Социальные постройки</div>
                             <div class="buildings-grid" id="socialBuildings"></div>
                         </div>
                         
                         <div class="buildings-section">
-                            <div class="section-title">
-                                <span>⚒️</span> Экономические постройки
-                            </div>
+                            <div class="section-title"><span>⚒️</span> Экономические постройки</div>
                             <div class="buildings-grid" id="economicBuildings"></div>
                         </div>
                         
                         <div class="buildings-section">
-                            <div class="section-title">
-                                <span>⚔️</span> Военные постройки
-                            </div>
+                            <div class="section-title"><span>⚔️</span> Военные постройки</div>
                             <div class="buildings-grid" id="militaryBuildings">
-                                <div style="text-align: center; padding: 20px; color: #999; background: white; border-radius: 12px;">
-                                    Скоро будут доступны
-                                </div>
+                                <div class="empty-tab">Скоро будут доступны</div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
                 <div id="tabArmy" class="tab-pane hidden">
-                    <div class="empty-tab">
-                        ⚔️ Армия в разработке<br>
-                        <span style="font-size: 12px;">Скоро здесь можно будет нанимать войска</span>
-                    </div>
+                    <div class="empty-tab">⚔️ Армия в разработке</div>
                 </div>
                 
                 <div id="tabCampaign" class="tab-pane hidden">
-                    <div class="empty-tab">
-                        🗺️ Походы в разработке<br>
-                        <span style="font-size: 12px;">Отправляйтесь в приключения за ресурсами</span>
-                    </div>
+                    <div class="empty-tab">🗺️ Походы в разработке</div>
                 </div>
                 
                 <div id="tabClans" class="tab-pane hidden">
                     <div class="clan-section">
-                        <h3 style="margin-bottom: 15px;">👥 Управление кланом</h3>
-                        <input type="text" id="clanName" placeholder="Название клана" maxlength="20">
-                        <input type="text" id="clanTag" placeholder="Тег (до 5 букв)" maxlength="5">
-                        <button class="building-upgrade-btn" id="createClanBtn" style="width:100%; margin:5px 0;">✨ Создать клан</button>
-                        <button class="building-upgrade-btn" id="topClansBtn" style="width:100%; background: #9C27B0;">🏆 Топ кланов</button>
-                        <div id="topClans" style="margin-top: 15px;"></div>
+                        <h3>👥 Управление кланом</h3>
+                        <input type="text" id="clanName" placeholder="Название клана">
+                        <input type="text" id="clanTag" placeholder="Тег (до 5 букв)">
+                        <button class="building-upgrade-btn" id="createClanBtn">✨ Создать клан</button>
+                        <button class="building-upgrade-btn" id="topClansBtn">🏆 Топ кланов</button>
+                        <div id="topClans"></div>
                     </div>
                 </div>
                 
                 <div id="tabSettings" class="tab-pane hidden">
                     <div class="clan-section">
-                        <h3 style="margin-bottom: 15px;">⚙️ Настройки</h3>
-                        
-                        <div id="avatarSection" style="margin-bottom: 20px; padding: 10px; background: white; border-radius: 12px;"></div>
-                        
-                        <div style="margin-bottom: 20px; padding: 10px; background: white; border-radius: 12px;">
-                            <h4 style="margin-bottom: 10px;">📝 Сменить имя</h4>
-                            <div style="display: flex; gap: 10px;">
-                                <input type="text" id="newNameInput" placeholder="Новое имя" maxlength="12" style="flex: 1;">
-                                <button class="building-upgrade-btn" id="changeNameWithPriceBtn" style="white-space: nowrap;">5000 🪙</button>
+                        <h3>⚙️ Настройки</h3>
+                        <div id="avatarSection"></div>
+                        <div class="settings-block">
+                            <h4>📝 Сменить имя</h4>
+                            <div class="name-change">
+                                <input type="text" id="newNameInput" placeholder="Новое имя" maxlength="12">
+                                <button class="building-upgrade-btn" id="changeNameWithPriceBtn">5000 🪙</button>
                             </div>
-                            <div style="font-size: 12px; color: #666; margin-top: 5px;">Смена имени стоит 5000 монет</div>
                         </div>
-                        
-                        <div style="color: #666; font-size: 13px; text-align: center;">
-                            ID: <span id="userTelegramId"></span>
-                        </div>
+                        <div class="user-id">ID: <span id="userTelegramId"></span></div>
                     </div>
                 </div>
             </div>
         </div>
         
         <div class="tabs">
-            <div class="tab active" data-tab="city">
-                <span class="tab-icon">🏠</span>
-                <span class="tab-label">Город</span>
-            </div>
-            <div class="tab" data-tab="army">
-                <span class="tab-icon">⚔️</span>
-                <span class="tab-label">Армия</span>
-            </div>
-            <div class="tab" data-tab="campaign">
-                <span class="tab-icon">🗺️</span>
-                <span class="tab-label">Походы</span>
-            </div>
-            <div class="tab" data-tab="clans">
-                <span class="tab-icon">👥</span>
-                <span class="tab-label">Кланы</span>
-            </div>
-            <div class="tab" data-tab="settings">
-                <span class="tab-icon">⚙️</span>
-                <span class="tab-label">Настройки</span>
-            </div>
+            <div class="tab active" data-tab="city"><span class="tab-icon">🏠</span><span class="tab-label">Город</span></div>
+            <div class="tab" data-tab="army"><span class="tab-icon">⚔️</span><span class="tab-label">Армия</span></div>
+            <div class="tab" data-tab="campaign"><span class="tab-icon">🗺️</span><span class="tab-label">Походы</span></div>
+            <div class="tab" data-tab="clans"><span class="tab-icon">👥</span><span class="tab-label">Кланы</span></div>
+            <div class="tab" data-tab="settings"><span class="tab-icon">⚙️</span><span class="tab-label">Настройки</span></div>
         </div>
     </div>
     
     <div class="toast" id="toast"></div>
-
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="/static/script.js"></script>
 </body>
 </html>
