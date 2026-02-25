@@ -58,9 +58,13 @@
             color: white;
             font-size: 18px;
             font-weight: bold;
-            text-transform: uppercase;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-            flex-shrink: 0;
+            overflow: hidden;
+        }
+        
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         
         .user-info {
@@ -313,12 +317,6 @@
             color: white;
         }
         
-        .building-level {
-            font-size: 13px;
-            color: #666;
-            margin-bottom: 4px;
-        }
-        
         .building-income {
             font-size: 12px;
             color: #4CAF50;
@@ -500,6 +498,64 @@
             color: white;
             font-size: 36px;
             font-weight: bold;
+            overflow: hidden;
+        }
+        
+        .avatar-preview-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .avatar-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .avatar-option {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .avatar-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .avatar-option.selected {
+            border-color: #4CAF50;
+            background: #e8f5e8;
+        }
+        
+        .avatar-option-img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin: 0 auto 8px;
+            object-fit: cover;
+            border: 2px solid #f0f0f0;
+        }
+        
+        .avatar-option-name {
+            font-weight: bold;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        
+        .avatar-option-price {
+            font-size: 11px;
+            color: #ff9800;
+        }
+        
+        .avatar-option-price.free {
+            color: #4CAF50;
         }
     </style>
 </head>
@@ -517,7 +573,10 @@
     <div class="game">
         <div class="top-bar-fixed">
             <div class="top-bar">
-                <div class="avatar" id="avatar">👤</div>
+                <div class="avatar" id="avatar">
+                    <img id="avatarImg" class="avatar-img" src="" style="display: none;">
+                    <span id="avatarPlaceholder">👤</span>
+                </div>
                 <div class="user-info">
                     <div class="name-level">
                         <div class="user-name" id="userName">Загрузка...</div>
@@ -634,14 +693,45 @@
                     </div>
                 </div>
                 
+                <!-- Вкладка Настройки с аватарками -->
                 <div id="tabSettings" class="tab-pane hidden">
                     <div class="clan-section">
                         <h3 style="margin-bottom: 15px;">⚙️ Настройки</h3>
                         
-                        <div style="margin-bottom: 15px;">
-                            <label style="font-weight: bold; display: block; margin-bottom: 5px;">Изменить имя</label>
-                            <input type="text" id="changeNameInput" placeholder="Новое имя" maxlength="12">
-                            <button class="building-upgrade-btn" id="changeNameBtn" style="width:100%;">Сохранить</button>
+                        <!-- Текущий профиль -->
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding: 10px; background: white; border-radius: 12px;">
+                            <img id="currentAvatarImg" src="" style="width: 60px; height: 60px; border-radius: 50%; border: 3px solid #667eea; object-fit: cover;">
+                            <div>
+                                <div style="font-weight: bold; font-size: 18px;" id="currentAvatarName">Загрузка...</div>
+                                <div style="color: #666;">Текущий аватар</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Смена ника -->
+                        <div style="margin-bottom: 20px; padding: 10px; background: white; border-radius: 12px;">
+                            <h4 style="margin-bottom: 10px;">📝 Сменить имя</h4>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="text" id="newNameInput" placeholder="Новое имя" maxlength="12" style="flex: 1;">
+                                <button class="building-upgrade-btn" id="changeNameWithPriceBtn" style="white-space: nowrap;">5000 🪙</button>
+                            </div>
+                            <div style="font-size: 12px; color: #666; margin-top: 5px;">Смена имени стоит 5000 монет</div>
+                        </div>
+                        
+                        <!-- Выбор аватара -->
+                        <div style="margin-bottom: 20px;">
+                            <h4 style="margin-bottom: 10px;">🖼️ Выберите аватар</h4>
+                            
+                            <!-- Бесплатные -->
+                            <div style="margin-bottom: 15px;">
+                                <div style="font-weight: bold; color: #4CAF50; margin-bottom: 10px;">Бесплатные</div>
+                                <div class="avatar-grid" id="freeAvatars"></div>
+                            </div>
+                            
+                            <!-- Платные -->
+                            <div>
+                                <div style="font-weight: bold; color: #ff9800; margin-bottom: 10px;">Премиум (25000 🪙)</div>
+                                <div class="avatar-grid" id="premiumAvatars"></div>
+                            </div>
                         </div>
                         
                         <div style="color: #666; font-size: 13px; text-align: center;">
@@ -685,10 +775,39 @@
         tg.expand();
         tg.ready();
         
+        // Конфиг аватарок с твоими ссылками
+        const AVATARS = {
+            'male_free': {
+                name: 'Мужской',
+                url: 'https://raw.githubusercontent.com/madbutcher1212/citybuilder-game/main/static/avatars/male_free.png',
+                price: 0,
+                category: 'free'
+            },
+            'female_free': {
+                name: 'Женский',
+                url: 'https://raw.githubusercontent.com/madbutcher1212/citybuilder-game/main/static/avatars/female_free.png',
+                price: 0,
+                category: 'free'
+            },
+            'male_premium': {
+                name: 'Лорд',
+                url: 'https://raw.githubusercontent.com/madbutcher1212/citybuilder-game/main/static/avatars/male_premium.png',
+                price: 25000,
+                category: 'premium'
+            },
+            'female_premium': {
+                name: 'Леди',
+                url: 'https://raw.githubusercontent.com/madbutcher1212/citybuilder-game/main/static/avatars/female_premium.png',
+                price: 25000,
+                category: 'premium'
+            }
+        };
+        
         let userData = {
             id: null,
             username: '',
             game_login: '',
+            avatar: 'male_free',
             gold: 100,
             wood: 50,
             food: 50,
@@ -771,14 +890,29 @@
             setTimeout(() => toast.style.display = 'none', 2000);
         }
         
-        function getAvatarLetter() {
-            return userData.game_login ? userData.game_login.charAt(0).toUpperCase() : '👤';
-        }
-        
         function updateAvatar() {
-            const letter = getAvatarLetter();
-            document.getElementById('avatar').textContent = letter;
-            document.getElementById('avatarPreview').textContent = letter;
+            const avatarImg = document.getElementById('avatarImg');
+            const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+            const avatarPreview = document.getElementById('avatarPreview');
+            
+            if (userData.avatar && AVATARS[userData.avatar] && AVATARS[userData.avatar].url) {
+                avatarImg.src = AVATARS[userData.avatar].url;
+                avatarImg.style.display = 'block';
+                avatarPlaceholder.style.display = 'none';
+                
+                // Обновляем превью в окне входа
+                const previewImg = document.createElement('img');
+                previewImg.src = AVATARS[userData.avatar].url;
+                previewImg.className = 'avatar-preview-img';
+                avatarPreview.innerHTML = '';
+                avatarPreview.appendChild(previewImg);
+            } else {
+                const letter = userData.game_login ? userData.game_login.charAt(0).toUpperCase() : '👤';
+                avatarPlaceholder.textContent = letter;
+                avatarPlaceholder.style.display = 'block';
+                avatarImg.style.display = 'none';
+                avatarPreview.innerHTML = '<span class="avatar-preview-img" style="font-size: 36px;">👤</span>';
+            }
         }
         
         function updateUserInfo() {
@@ -847,7 +981,6 @@
             document.getElementById('stoneDisplay').textContent = userData.stone;
             document.getElementById('stoneIncome').textContent = `+${income.stone}/ч`;
             
-            // Расчет еды с учетом потребления
             const foodProduction = income.food;
             const foodConsumption = userData.population_current;
             const foodBalance = foodProduction - foodConsumption;
@@ -868,9 +1001,8 @@
             document.getElementById('populationDisplay').textContent = 
                 `${userData.population_current}/${userData.population_max}`;
             
-            // Проверка может ли население расти
             const canGrow = userData.food > 0 || foodProduction >= foodConsumption;
-            document.getElementById('populationGrowth').textContent = canGrow ? '+3/ч' : '⚠️ рост';
+            document.getElementById('populationGrowth').textContent = canGrow ? '+3/ч' : '⚠️';
         }
         
         function updateTownHallDisplay() {
@@ -888,6 +1020,96 @@
             }
         }
         
+        // Обновление раздела настроек с аватарками
+        function updateSettingsUI() {
+            // Текущий аватар
+            if (userData.avatar && AVATARS[userData.avatar]) {
+                document.getElementById('currentAvatarImg').src = AVATARS[userData.avatar].url;
+                document.getElementById('currentAvatarName').textContent = AVATARS[userData.avatar].name;
+            }
+            
+            // Бесплатные аватары
+            let freeHtml = '';
+            Object.keys(AVATARS).forEach(key => {
+                const a = AVATARS[key];
+                if (a.category === 'free') {
+                    const isSelected = userData.avatar === key ? 'selected' : '';
+                    freeHtml += `
+                        <div class="avatar-option ${isSelected}" onclick="selectAvatar('${key}')">
+                            <img src="${a.url}" class="avatar-option-img">
+                            <div class="avatar-option-name">${a.name}</div>
+                            <div class="avatar-option-price free">Бесплатно</div>
+                        </div>
+                    `;
+                }
+            });
+            document.getElementById('freeAvatars').innerHTML = freeHtml;
+            
+            // Платные аватары
+            let premiumHtml = '';
+            Object.keys(AVATARS).forEach(key => {
+                const a = AVATARS[key];
+                if (a.category === 'premium') {
+                    const isSelected = userData.avatar === key ? 'selected' : '';
+                    const canAfford = userData.gold >= a.price;
+                    premiumHtml += `
+                        <div class="avatar-option ${isSelected}" onclick="selectAvatar('${key}')">
+                            <img src="${a.url}" class="avatar-option-img">
+                            <div class="avatar-option-name">${a.name}</div>
+                            <div class="avatar-option-price">${a.price} 🪙</div>
+                        </div>
+                    `;
+                }
+            });
+            document.getElementById('premiumAvatars').innerHTML = premiumHtml;
+        }
+        
+        // Выбор аватара
+        async function selectAvatar(avatarKey) {
+            const avatar = AVATARS[avatarKey];
+            if (!avatar) return;
+            
+            // Если уже выбран этот аватар
+            if (userData.avatar === avatarKey) {
+                showToast('✅ Это уже ваш аватар');
+                return;
+            }
+            
+            // Если платный - проверяем деньги
+            if (avatar.price > 0) {
+                if (userData.gold < avatar.price) {
+                    showToast('❌ Не хватает монет');
+                    return;
+                }
+            }
+            
+            // Отправляем на сервер
+            await performAction('set_avatar', { avatar: avatarKey, price: avatar.price });
+        }
+        
+        // Платная смена имени
+        async function changeNamePaid() {
+            const nameInput = document.getElementById('newNameInput');
+            let newName = nameInput.value.trim();
+            
+            if (!newName) {
+                showToast('❌ Введите имя');
+                return;
+            }
+            
+            if (newName.length > 12) {
+                newName = newName.substring(0, 12);
+            }
+            
+            if (userData.gold < 5000) {
+                showToast('❌ Не хватает монет');
+                return;
+            }
+            
+            await performAction('change_name_paid', { game_login: newName });
+        }
+        
+        // Обновление таймера
         function updateTimer() {
             const now = Date.now();
             const timePassed = now - userData.lastCollection;
@@ -906,6 +1128,7 @@
             }
         }
         
+        // Проверка автосбора
         async function checkAutoCollection() {
             const now = Date.now();
             if (now - userData.lastCollection >= COLLECTION_INTERVAL) {
@@ -913,6 +1136,7 @@
             }
         }
         
+        // Проверка возможности улучшения
         function canUpgrade(buildingId, currentLevel) {
             if (buildingId === 'townhall') {
                 if (userData.level >= 5) return false;
@@ -931,6 +1155,7 @@
             return userData.gold >= cost.gold && userData.wood >= cost.wood && userData.stone >= cost.stone;
         }
         
+        // Генерация карточки здания
         function generateBuildingCardHTML(buildingId) {
             const config = BUILDINGS_CONFIG[buildingId];
             if (!config) return '';
@@ -1030,6 +1255,7 @@
             `;
         }
         
+        // Обновление города
         function updateCityUI() {
             updateResourcesDisplay();
             updateTownHallDisplay();
@@ -1044,6 +1270,7 @@
             document.getElementById('economicBuildings').innerHTML = economicHtml;
         }
         
+        // Улучшение ратуши
         async function upgradeTownHall() {
             if (userData.level >= 5) {
                 showToast('🏛️ Максимальный уровень');
@@ -1056,6 +1283,7 @@
             await performAction('upgrade_level', {});
         }
         
+        // Постройка здания
         async function buildBuilding(buildingId) {
             const existing = buildings.find(b => b.id === buildingId);
             if (existing) {
@@ -1071,6 +1299,7 @@
             await performAction('build', {building_id: buildingId});
         }
         
+        // Улучшение здания
         async function upgradeBuilding(buildingId) {
             const building = buildings.find(b => b.id === buildingId);
             if (!building) {
@@ -1084,6 +1313,7 @@
             await performAction('upgrade', {building_id: buildingId});
         }
         
+        // Отправка действия на сервер
         async function performAction(action, data = {}) {
             try {
                 const response = await fetch(`${API_URL}/api/action`, {
@@ -1107,12 +1337,20 @@
                             userData.game_login = result.state.game_login;
                             updateUserInfo();
                         }
+                        if (result.state.avatar !== undefined) {
+                            userData.avatar = result.state.avatar;
+                            updateAvatar();
+                            updateSettingsUI();
+                        }
                         if (result.state.buildings) buildings = result.state.buildings;
                         updateCityUI();
+                        updateSettingsUI();
                         
                         if (action === 'build') showToast('✅ Построено!');
                         if (action === 'upgrade') showToast('✅ Улучшено!');
                         if (action === 'upgrade_level') showToast('🏛️ Ратуша улучшена!');
+                        if (action === 'set_avatar') showToast('✅ Аватар изменен!');
+                        if (action === 'change_name_paid') showToast('✅ Имя изменено!');
                     }
                     return true;
                 } else {
@@ -1125,6 +1363,7 @@
             }
         }
         
+        // Авторизация
         async function login() {
             try {
                 const response = await fetch(`${API_URL}/api/auth`, {
@@ -1138,6 +1377,7 @@
                     userData.id = data.user.id;
                     userData.username = data.user.username;
                     userData.game_login = data.user.game_login || '';
+                    userData.avatar = data.user.avatar || 'male_free';
                     userData.gold = data.user.gold;
                     userData.wood = data.user.wood;
                     userData.food = data.user.food;
@@ -1167,6 +1407,7 @@
             }
         }
         
+        // Сохранение имени при первом входе
         async function saveGameLogin() {
             const loginInput = document.getElementById('newLogin');
             let newLogin = loginInput.value.trim();
@@ -1182,21 +1423,7 @@
             }
         }
         
-        async function changeName() {
-            const nameInput = document.getElementById('changeNameInput');
-            let newName = nameInput.value.trim();
-            if (!newName) {
-                showToast('❌ Введите имя');
-                return;
-            }
-            if (newName.length > 12) newName = newName.substring(0,12);
-            const success = await performAction('set_login', {game_login: newName});
-            if (success) {
-                nameInput.value = '';
-                showToast(`✅ Имя изменено на ${newName}`);
-            }
-        }
-        
+        // Переключение вкладок
         function switchTab(tabId) {
             currentTab = tabId;
             document.querySelectorAll('.tab').forEach(tab => {
@@ -1206,8 +1433,14 @@
                 pane.classList.add('hidden');
             });
             document.getElementById(`tab${tabId.charAt(0).toUpperCase()+tabId.slice(1)}`).classList.remove('hidden');
+            
+            // Обновляем настройки при переходе на вкладку
+            if (tabId === 'settings') {
+                updateSettingsUI();
+            }
         }
         
+        // Кланы (заглушки)
         async function createClan() { showToast('🚧 В разработке'); }
         
         async function showTopClans() {
@@ -1229,6 +1462,7 @@
             } catch { showToast('❌ Ошибка'); }
         }
         
+        // Запуск
         document.addEventListener('DOMContentLoaded', () => {
             login();
             document.querySelectorAll('.tab').forEach(tab => {
@@ -1237,7 +1471,7 @@
             document.getElementById('createClanBtn').addEventListener('click', createClan);
             document.getElementById('topClansBtn').addEventListener('click', showTopClans);
             document.getElementById('confirmLogin').addEventListener('click', saveGameLogin);
-            document.getElementById('changeNameBtn').addEventListener('click', changeName);
+            document.getElementById('changeNameWithPriceBtn').addEventListener('click', changeNamePaid);
             setInterval(() => { updateTimer(); checkAutoCollection(); }, 1000);
             switchTab('city');
         });
