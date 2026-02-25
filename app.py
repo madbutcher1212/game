@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify, render_template
-from flask_cors import CORS
-from flask_cors import CORS
+from flask_cors import CORS  # <- ЭТУ СТРОКУ
 from supabase import create_client, Client
 import os
 import json
@@ -10,7 +9,7 @@ from urllib.parse import parse_qs
 import time
 
 app = Flask(__name__)
-CORS(app)  # 👈 ЭТО РЕШАЕТ ПРОБЛЕМУ
+CORS(app) 
 
 # ========== НАСТРОЙКИ ==========
 SUPABASE_URL = "https://xevwktdwyioyantuqntb.supabase.co"
@@ -616,4 +615,5 @@ def top_clans():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
+
 
