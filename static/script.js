@@ -726,6 +726,11 @@ async function showTopClans() {
         showToast('❌ Ошибка');
     }
 }
+// Обработчик кнопки улучшения ратуши
+document.getElementById('townHallUpgradeBtn')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    upgradeTownHall();
+});
 
 document.addEventListener('DOMContentLoaded', () => {
     login();
