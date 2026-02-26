@@ -318,11 +318,11 @@ body {
     background: white;
     border: 2px solid #ddd;
     border-radius: 12px;
-    padding: 15px;
+    padding: 12px;
     position: relative;
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    align-items: center;
+    gap: 12px;
 }
 
 .building-card.available {
@@ -341,20 +341,13 @@ body {
     background: #fff3e0;
 }
 
-.building-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 4px;
-}
-
 .building-icon {
     font-size: 40px;
     min-width: 50px;
     text-align: center;
 }
 
-.building-title {
+.building-info {
     flex: 1;
 }
 
@@ -366,8 +359,8 @@ body {
 }
 
 .building-level-badge {
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
     background: #4CAF50;
     color: white;
     border-radius: 50%;
@@ -375,43 +368,35 @@ body {
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    font-size: 16px;
+    font-size: 14px;
     position: absolute;
-    top: 12px;
-    right: 12px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    top: 8px;
+    right: 8px;
 }
 
 .building-income {
-    font-size: 13px;
+    font-size: 12px;
     color: #4CAF50;
-    margin-left: 62px; /* отступ под иконку */
-    margin-bottom: 8px;
-}
-
-.building-income span {
-    font-weight: bold;
+    margin-top: 2px;
 }
 
 .building-bonus {
-    font-size: 13px;
+    font-size: 12px;
     color: #ff9800;
-    margin-left: 62px;
-    margin-bottom: 8px;
+    margin-top: 2px;
 }
 
 .building-upgrade-btn {
     background: #4CAF50;
     color: white;
     border: none;
-    border-radius: 20px;
-    padding: 10px 16px;
-    font-size: 14px;
+    border-radius: 16px;
+    padding: 6px 12px;
+    font-size: 12px;
     font-weight: bold;
     cursor: pointer;
+    margin-top: 6px;
     width: 100%;
-    transition: background 0.2s;
-    margin-top: 4px;
 }
 
 .building-upgrade-btn.unavailable {
@@ -419,11 +404,22 @@ body {
     cursor: not-allowed;
 }
 
-.building-lock-text {
-    font-size: 12px;
-    color: #ff9800;
-    text-align: center;
-    margin-top: 4px;
+.town-hall-upgrade-btn {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 8px;
+    width: 100%;
+}
+
+.town-hall-upgrade-btn.unavailable {
+    background: #ccc;
+    cursor: not-allowed;
 }
 
 /* Нижние вкладки */
