@@ -275,6 +275,20 @@ function updateTownHallDisplay() {
     const income = TOWN_HALL_INCOME[userData.level] || 0;
     document.getElementById('townHallIncome').textContent = `+${income} 🪙/ч`;
     document.getElementById('townHallLevelBadge').textContent = userData.level;
+    
+    // Кнопка улучшения ратуши
+    const upgradeBtn = document.getElementById('townHallUpgradeBtn');
+    if (upgradeBtn) {
+        if (userData.level >= 5) {
+            upgradeBtn.style.display = 'none';
+        } else {
+            upgradeBtn.style.display = 'block';
+            const canUpgrade = userData.gold >= TOWN_HALL_UPGRADE_COST[userData.level + 1].gold &&
+                              userData.wood >= TOWN_HALL_UPGRADE_COST[userData.level + 1].wood &&
+                              userData.stone >= TOWN_HALL_UPGRADE_COST[userData.level + 1].stone;
+            upgradeBtn.className = canUpgrade ? 'town-hall-upgrade-btn' : 'town-hall-upgrade-btn unavailable';
+        }
+    }
 }
 
 function updateTimer() {
@@ -346,12 +360,19 @@ function generateBuildingCardHTML(id) {
     let incomeText = '';
     if (level > 0 && Object.keys(current).length) {
         const parts = [];
-        if (current.gold) parts.push(`🪙+${current.gold}`);
-        if (current.wood) parts.push(`🪵+${current.wood}`);
-        if (current.stone) parts.push(`⛰️+${current.stone}`);
-        if (current.food) parts.push(current.food > 0 ? `🌾+${current.food}` : `🌾${current.food}`);
-        if (current.populationGrowth) parts.push(`👥+${current.populationGrowth}`);
-        incomeText = `<div class="building-income">${parts.join(' ')}/ч</div>`;
+        if (current.gold) parts.push(`🪙 +${current.gold}`);
+        if (current.wood) parts.push(`🪵 +${current.wood}`);
+        if (current.stone) parts.push(`⛰️ +${current.stone}`);
+        if (current.food) parts.push(current.food > 0 ? `🌾 +${current.food}` : `🌾 ${current.food}`);
+        if (current.populationGrowth) parts.push(`👥 +${current.populationGrowth}`);
+        incomeText = `<div class="building-income">${parts.join(' • ')}/ч</div>`;
+    }
+    
+    // Бонус для жилого района
+    let bonusText = '';
+    if (id === 'house' && level > 0) {
+        const totalBonus = config.populationBonus.slice(0, level).reduce((a, b) => a + b, 0);
+        bonusText = `<div class="building-bonus">👥 +${totalBonus} лимит</div>`;
     }
     
     let buttonHtml = '';
@@ -371,16 +392,17 @@ function generateBuildingCardHTML(id) {
     
     return `
         <div class="building-card ${statusClass}">
-            <div class="building-icon">${config.icon}</div>
-            <div class="building-info">
-                <div class="building-header">
-                    <span class="building-name">${config.name}</span>
+            <div class="building-header">
+                <div class="building-icon">${config.icon}</div>
+                <div class="building-title">
+                    <div class="building-name">${config.name}</div>
                 </div>
-                ${level > 0 ? incomeText : ''}
-                ${buttonHtml}
-                ${lockText}
             </div>
             ${level > 0 ? `<div class="building-level-badge">${level}</div>` : ''}
+            ${bonusText}
+            ${incomeText}
+            ${buttonHtml}
+            ${lockText}
         </div>
     `;
 }
@@ -551,24 +573,6 @@ async function confirmAvatarSelection() {
     }
     
     closeAvatarSelector();
-}
-
-async function buyAvatar(key) {
-    const a = AVATARS[key];
-    if (!a) return;
-    if (userData.gold < a.price) {
-        showToast('❌ Не хватает монет');
-        return;
-    }
-    await performAction('buy_avatar', { avatar: key, price: a.price });
-}
-
-async function selectAvatar(key) {
-    if (!userData.owned_avatars.includes(key)) {
-        showToast('❌ Сначала купите этот аватар');
-        return;
-    }
-    await performAction('select_avatar', { avatar: key });
 }
 
 async function upgradeTownHall() {
