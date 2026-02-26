@@ -49,6 +49,8 @@ let buildings = [
     { id: 'lumber', level: 1 }
 ];
 
+let selectedAvatar = null;
+
 const TOWN_HALL_INCOME = {1:5, 2:10, 3:20, 4:45, 5:100};
 
 const TOWN_HALL_UPGRADE_COST = {
@@ -67,6 +69,13 @@ const BUILDINGS_CONFIG = {
             {gold:250, wood:300, stone:125},
             {gold:1500, wood:1000, stone:400},
             {gold:7200, wood:5300, stone:2450}
+        ],
+        income: [
+            {},
+            {},
+            {},
+            {},
+            {}
         ],
         populationBonus: [20,20,40,100,250]
     },
@@ -265,7 +274,6 @@ function updateResourcesDisplay() {
 function updateTownHallDisplay() {
     const income = TOWN_HALL_INCOME[userData.level] || 0;
     document.getElementById('townHallIncome').textContent = `+${income} 🪙/ч`;
-    document.getElementById('townHallLevel').textContent = userData.level;
     document.getElementById('townHallLevelBadge').textContent = userData.level;
 }
 
@@ -321,24 +329,17 @@ function generateBuildingCardHTML(id) {
     if (!config) return '';
     
     const level = getBuildingLevel(id);
-    let statusClass = '', statusBadge = '', bonusText = '';
-    
-    if (id === 'house' && level > 0) {
-        const total = config.populationBonus.slice(0, level).reduce((a, b) => a + b, 0);
-        bonusText = `<div class="building-income">👥 +${total} лимит</div>`;
-    }
+    let statusClass = '', lockText = '';
     
     if (level === 0) {
         if (userData.level < (config.requiredTownHall?.[0] || 1)) {
             statusClass = 'locked';
-            statusBadge = `<span class="building-status locked">🔒 Требуется ратуша ${config.requiredTownHall[0]}</span>`;
+            lockText = `<div class="building-lock-text">🔒 Требуется ратуша ${config.requiredTownHall[0]}</div>`;
         } else {
             statusClass = 'unavailable';
-            statusBadge = '<span class="building-status">🚫 Не построено</span>';
         }
     } else {
         statusClass = 'available';
-        statusBadge = `<span class="building-status built">🏗️ Ур. ${level}</span>`;
     }
     
     const current = config.income?.[level - 1] || {};
@@ -350,14 +351,22 @@ function generateBuildingCardHTML(id) {
         if (current.stone) parts.push(`⛰️+${current.stone}`);
         if (current.food) parts.push(current.food > 0 ? `🌾+${current.food}` : `🌾${current.food}`);
         if (current.populationGrowth) parts.push(`👥+${current.populationGrowth}`);
-        incomeText = `<div class="building-income">📊 Доход: ${parts.join(' ')}/ч</div>`;
+        incomeText = `<div class="building-income">${parts.join(' ')}/ч</div>`;
     }
     
-    let upgradeBtn = '';
-    if (level > 0 && level < config.maxLevel && canUpgrade(id, level)) {
-        upgradeBtn = `<button class="building-upgrade-btn" onclick="showUpgradeModal('${id}')">Улучшить</button>`;
-    } else if (level === 0 && canUpgrade(id, 0)) {
-        upgradeBtn = `<button class="building-upgrade-btn" onclick="showUpgradeModal('${id}')">Построить</button>`;
+    let buttonHtml = '';
+    if (level > 0 && level < config.maxLevel) {
+        const canUpgradeNow = canUpgrade(id, level);
+        buttonHtml = `<button class="building-upgrade-btn ${canUpgradeNow ? '' : 'unavailable'}" 
+            onclick="${canUpgradeNow ? `showUpgradeModal('${id}')` : ''}">
+            Улучшить
+        </button>`;
+    } else if (level === 0 && !lockText) {
+        const canBuildNow = canUpgrade(id, 0);
+        buttonHtml = `<button class="building-upgrade-btn ${canBuildNow ? '' : 'unavailable'}" 
+            onclick="${canBuildNow ? `showUpgradeModal('${id}')` : ''}">
+            Построить
+        </button>`;
     }
     
     return `
@@ -366,12 +375,12 @@ function generateBuildingCardHTML(id) {
             <div class="building-info">
                 <div class="building-header">
                     <span class="building-name">${config.name}</span>
-                    ${statusBadge}
                 </div>
-                ${bonusText}
-                ${incomeText}
-                ${upgradeBtn}
+                ${level > 0 ? incomeText : ''}
+                ${buttonHtml}
+                ${lockText}
             </div>
+            ${level > 0 ? `<div class="building-level-badge">${level}</div>` : ''}
         </div>
     `;
 }
@@ -383,33 +392,42 @@ function showUpgradeModal(buildingId) {
     const nextIncome = config.income?.[level] || {};
     const cost = level === 0 ? config.baseCost : config.upgradeCosts[level - 1];
     
-    let incomeText = '';
+    let incomeHtml = '';
     const parts = [];
-    if (nextIncome.gold) parts.push(`🪙+${nextIncome.gold}`);
-    if (nextIncome.wood) parts.push(`🪵+${nextIncome.wood}`);
-    if (nextIncome.stone) parts.push(`⛰️+${nextIncome.stone}`);
-    if (nextIncome.food) parts.push(nextIncome.food > 0 ? `🌾+${nextIncome.food}` : `🌾${nextIncome.food}`);
-    if (nextIncome.populationGrowth) parts.push(`👥+${nextIncome.populationGrowth}`);
-    incomeText = parts.join(' ') || 'нет дохода';
+    if (nextIncome.gold) parts.push(`🪙 +${nextIncome.gold}`);
+    if (nextIncome.wood) parts.push(`🪵 +${nextIncome.wood}`);
+    if (nextIncome.stone) parts.push(`⛰️ +${nextIncome.stone}`);
+    if (nextIncome.food) parts.push(nextIncome.food > 0 ? `🌾 +${nextIncome.food}` : `🌾 ${nextIncome.food}`);
+    if (nextIncome.populationGrowth) parts.push(`👥 +${nextIncome.populationGrowth}`);
+    
+    if (parts.length) {
+        incomeHtml = parts.join('<br>');
+    } else {
+        incomeHtml = 'нет дохода';
+    }
     
     const modal = document.getElementById('upgradeModal');
     modal.innerHTML = `
         <div class="upgrade-info">
-            <h3>${level === 0 ? 'Постройка' : 'Улучшение'} ${config.name}</h3>
-            <div class="upgrade-stats">
-                <div class="upgrade-stat">
-                    <span>Текущий уровень:</span>
-                    <span>${level || 'нет'}</span>
+            <h3>${level === 0 ? 'Постройка' : 'Улучшить'} ${config.name}</h3>
+            
+            <div class="upgrade-levels">
+                <div class="upgrade-level-current">
+                    <span>${level || 0}</span>
+                    <small>текущий</small>
                 </div>
-                <div class="upgrade-stat">
-                    <span>Новый уровень:</span>
+                <div class="upgrade-arrow">→</div>
+                <div class="upgrade-level-next">
                     <span>${nextLevel}</span>
-                </div>
-                <div class="upgrade-stat">
-                    <span>Новый доход:</span>
-                    <span>${incomeText}/ч</span>
+                    <small>новый</small>
                 </div>
             </div>
+            
+            <div class="upgrade-income">
+                <h4>Прибыль на ${nextLevel} уровне:</h4>
+                <div class="upgrade-income-item">${incomeHtml}</div>
+            </div>
+            
             <div class="upgrade-cost">
                 <h4>Стоимость:</h4>
                 <div class="upgrade-cost-item">
@@ -427,8 +445,13 @@ function showUpgradeModal(buildingId) {
                 </div>
                 ` : ''}
             </div>
-            <button class="btn" onclick="confirmUpgrade('${buildingId}')">${level === 0 ? 'Построить' : 'Улучшить'}</button>
-            <button class="btn" style="margin-top:10px; background:#999;" onclick="closeUpgradeModal()">Отмена</button>
+            
+            <div class="upgrade-actions">
+                <button class="btn" onclick="confirmUpgrade('${buildingId}')">
+                    ${level === 0 ? 'Построить' : 'Улучшить'}
+                </button>
+                <button class="btn btn-secondary" onclick="closeUpgradeModal()">Отмена</button>
+            </div>
         </div>
     `;
     
@@ -472,36 +495,62 @@ function updateCityUI() {
 }
 
 function openAvatarSelector() {
+    selectedAvatar = userData.avatar;
     const grid = document.getElementById('avatarGrid');
     grid.innerHTML = '';
     
     Object.keys(AVATARS).forEach(key => {
         const a = AVATARS[key];
         const owned = userData.owned_avatars.includes(key);
-        const selected = userData.avatar === key;
+        const selected = selectedAvatar === key;
         
         const div = document.createElement('div');
         div.className = `avatar-option ${selected ? 'selected' : ''}`;
+        div.dataset.key = key;
         div.innerHTML = `
             <img src="${a.url}" class="avatar-option-img">
             <div class="avatar-option-name">${a.name}</div>
             ${!owned ? `<div class="avatar-option-price">${a.price} 🪙</div>` : ''}
         `;
-        div.onclick = () => {
-            if (owned) {
-                selectAvatar(key);
-            } else {
-                buyAvatar(key);
-            }
-        };
+        div.onclick = () => selectAvatarOption(key);
         grid.appendChild(div);
     });
     
     document.getElementById('avatarOverlay').style.display = 'flex';
 }
 
+function selectAvatarOption(key) {
+    selectedAvatar = key;
+    document.querySelectorAll('.avatar-option').forEach(opt => {
+        opt.classList.toggle('selected', opt.dataset.key === key);
+    });
+}
+
 function closeAvatarSelector() {
     document.getElementById('avatarOverlay').style.display = 'none';
+    selectedAvatar = null;
+}
+
+async function confirmAvatarSelection() {
+    if (!selectedAvatar || selectedAvatar === userData.avatar) {
+        closeAvatarSelector();
+        return;
+    }
+    
+    const avatar = AVATARS[selectedAvatar];
+    const owned = userData.owned_avatars.includes(selectedAvatar);
+    
+    if (!owned) {
+        if (userData.gold < avatar.price) {
+            showToast('❌ Не хватает монет');
+            return;
+        }
+        await performAction('buy_avatar', { avatar: selectedAvatar, price: avatar.price });
+    } else {
+        await performAction('select_avatar', { avatar: selectedAvatar });
+    }
+    
+    closeAvatarSelector();
 }
 
 async function buyAvatar(key) {
@@ -512,7 +561,6 @@ async function buyAvatar(key) {
         return;
     }
     await performAction('buy_avatar', { avatar: key, price: a.price });
-    closeAvatarSelector();
 }
 
 async function selectAvatar(key) {
@@ -521,7 +569,6 @@ async function selectAvatar(key) {
         return;
     }
     await performAction('select_avatar', { avatar: key });
-    closeAvatarSelector();
 }
 
 async function upgradeTownHall() {
@@ -687,6 +734,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('topClansBtn')?.addEventListener('click', showTopClans);
     document.getElementById('confirmLogin')?.addEventListener('click', saveGameLogin);
     document.getElementById('changeNameWithPriceBtn')?.addEventListener('click', changeNamePaid);
+    document.getElementById('confirmAvatarBtn')?.addEventListener('click', confirmAvatarSelection);
     
     setInterval(() => {
         updateTimer();
