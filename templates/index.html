@@ -21,7 +21,7 @@
 
     <!-- Окно улучшения здания -->
     <div id="upgradeOverlay" class="overlay" style="display: none;">
-        <div class="modal" id="upgradeModal"></div>
+        <div class="modal upgrade-modal" id="upgradeModal"></div>
     </div>
 
     <!-- Окно выбора аватара -->
@@ -29,7 +29,10 @@
         <div class="modal avatar-modal">
             <h3>Выберите аватар</h3>
             <div class="avatar-grid" id="avatarGrid"></div>
-            <button class="btn" onclick="closeAvatarSelector()">Закрыть</button>
+            <div class="avatar-actions">
+                <button class="btn" id="confirmAvatarBtn">Подтвердить</button>
+                <button class="btn btn-secondary" onclick="closeAvatarSelector()">Отмена</button>
+            </div>
         </div>
     </div>
 
@@ -98,9 +101,8 @@
                         <div class="town-hall-info">
                             <div class="town-hall-name">Ратуша</div>
                             <div class="town-hall-income" id="townHallIncome">+5 🪙/ч</div>
-                            <div class="town-hall-level">Уровень <span id="townHallLevel">1</span>/5</div>
                         </div>
-                        <div class="town-hall-level-badge" id="townHallLevelBadge">1</div>
+                        <div class="level-badge-large" id="townHallLevelBadge">1</div>
                     </div>
                     
                     <!-- Социальные постройки -->
