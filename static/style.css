@@ -191,6 +191,7 @@ body {
     background: rgba(0,0,0,0.05);
 }
 
+/* Ратуша - особый стиль */
 .town-hall {
     background: linear-gradient(135deg, #f5e6d3, #e6d5b8);
     border: 3px solid #b5946e;
@@ -229,9 +230,10 @@ body {
     font-size: 14px;
     color: #4CAF50;
     font-weight: bold;
+    margin-bottom: 4px;
 }
 
-.level-badge-large {
+.town-hall-level-badge {
     width: 40px;
     height: 40px;
     background: #b5946e;
@@ -245,6 +247,26 @@ body {
     box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 
+.town-hall-upgrade-btn {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 8px;
+    transition: background 0.2s;
+}
+
+.town-hall-upgrade-btn.unavailable {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+/* Общие стили для секций */
 .buildings-section {
     background: #f8f8f8;
     border-radius: 12px;
@@ -288,18 +310,19 @@ body {
     padding: 12px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
 }
 
+/* Карточка здания */
 .building-card {
     background: white;
     border: 2px solid #ddd;
     border-radius: 12px;
-    padding: 12px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    padding: 15px;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .building-card.available {
@@ -318,32 +341,33 @@ body {
     background: #fff3e0;
 }
 
+.building-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 4px;
+}
+
 .building-icon {
     font-size: 40px;
     min-width: 50px;
     text-align: center;
 }
 
-.building-info {
+.building-title {
     flex: 1;
-}
-
-.building-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 4px;
 }
 
 .building-name {
     font-weight: bold;
     font-size: 16px;
     color: #333;
+    margin-bottom: 2px;
 }
 
 .building-level-badge {
-    width: 30px;
-    height: 30px;
+    width: 36px;
+    height: 36px;
     background: #4CAF50;
     color: white;
     border-radius: 50%;
@@ -351,15 +375,28 @@ body {
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 16px;
     position: absolute;
-    right: 12px;
     top: 12px;
+    right: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .building-income {
-    font-size: 12px;
+    font-size: 13px;
     color: #4CAF50;
+    margin-left: 62px; /* отступ под иконку */
+    margin-bottom: 8px;
+}
+
+.building-income span {
+    font-weight: bold;
+}
+
+.building-bonus {
+    font-size: 13px;
+    color: #ff9800;
+    margin-left: 62px;
     margin-bottom: 8px;
 }
 
@@ -368,12 +405,13 @@ body {
     color: white;
     border: none;
     border-radius: 20px;
-    padding: 8px 16px;
-    font-size: 13px;
+    padding: 10px 16px;
+    font-size: 14px;
     font-weight: bold;
     cursor: pointer;
     width: 100%;
     transition: background 0.2s;
+    margin-top: 4px;
 }
 
 .building-upgrade-btn.unavailable {
@@ -381,17 +419,14 @@ body {
     cursor: not-allowed;
 }
 
-.building-upgrade-btn:hover:not(.unavailable) {
-    background: #45a049;
-}
-
 .building-lock-text {
     font-size: 12px;
     color: #ff9800;
-    margin-top: 5px;
     text-align: center;
+    margin-top: 4px;
 }
 
+/* Нижние вкладки */
 .tabs {
     display: flex;
     justify-content: space-around;
@@ -426,6 +461,7 @@ body {
     margin-bottom: 2px;
 }
 
+/* Настройки */
 .settings-section {
     background: #f8f8f8;
     border-radius: 12px;
@@ -489,6 +525,7 @@ body {
     color: #333;
 }
 
+/* Модальные окна */
 .overlay {
     position: fixed;
     top: 0;
@@ -645,6 +682,7 @@ input {
     border-radius: 12px;
 }
 
+/* Окно улучшения */
 .upgrade-info {
     text-align: center;
 }
